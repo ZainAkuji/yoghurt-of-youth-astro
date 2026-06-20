@@ -1,0 +1,11 @@
+---
+import Layout from "../layouts/Layout.astro";
+import OrderConfirmation from "../components/OrderConfirmation.tsx";
+---
+
+<Layout
+  title="Order Confirmed | Yoghurt of Youth"
+  description="Your Yoghurt of Youth order is confirmed."
+>
+  <OrderConfirmation client:load />
+</Layout>

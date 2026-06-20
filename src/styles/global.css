@@ -4,3 +4,17 @@ button:not(:disabled),
 a {
   cursor: pointer;
 }
+
+.confetti-piece {
+  position: absolute;
+  top: -10px;
+  width: 8px;
+  height: 14px;
+  opacity: 0.9;
+  border-radius: 1px;
+  animation: confetti-fall 2.6s linear forwards;
+}
+@keyframes confetti-fall {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
