@@ -118,9 +118,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       yoghurt_strain: String(totals.deliveryBrand || ""),
     };
 
-    const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_DOMAIN;
+    const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
     const siteUrl = normalizeSiteUrl(rawSiteUrl || "");
-    if (!siteUrl) return res.status(500).json({ error: "Missing NEXT_PUBLIC_SITE_URL / NEXT_PUBLIC_DOMAIN" });
+    if (!siteUrl) return res.status(500).json({ error: "Missing NEXT_PUBLIC_SITE_URL" });
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
