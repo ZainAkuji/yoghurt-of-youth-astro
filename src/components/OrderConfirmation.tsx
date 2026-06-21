@@ -20,10 +20,10 @@ type ConfirmOrder = {
   orderId?: string; formattedDate: string; deliveryWindow: string; lines: string[];
   qtyTotal: number; plainQty: number; flavQty: number;
   totalText: string; totalValue: number;
-  address: string; name: string; paymentMethod: string;
+  address: string; name: string;
 };
 
-function buildConfirmOrderFromDraft(draft: any, orderId: string, paymentMethod: string): ConfirmOrder | null {
+function buildConfirmOrderFromDraft(draft: any, orderId: string): ConfirmOrder | null {
   if (!draft) return null;
 
   // SUBSCRIPTION
@@ -52,7 +52,6 @@ function buildConfirmOrderFromDraft(draft: any, orderId: string, paymentMethod: 
       totalValue: numeric,
       address: String(draft?.customer?.address || ""),
       name: String(draft?.customer?.name || ""),
-      paymentMethod,
     };
   }
 
@@ -74,7 +73,6 @@ function buildConfirmOrderFromDraft(draft: any, orderId: string, paymentMethod: 
     totalValue: total,
     address: String(draft?.customer?.address || ""),
     name: String(draft?.customer?.name || ""),
-    paymentMethod,
   };
 }
 
@@ -115,8 +113,7 @@ export default function OrderConfirmation() {
         const orderId = data.order_id || "";
         const rawDraft = sessionStorage.getItem("yoy_checkout_draft");
         const draft = rawDraft ? JSON.parse(rawDraft) : null;
-        const paymentMethod = provider === "stripe" ? "Stripe" : "Weekly Gut Punch (Stripe)";
-        const built = buildConfirmOrderFromDraft(draft, orderId, paymentMethod);
+        const built = buildConfirmOrderFromDraft(draft, orderId);
 
         if (!built) { setStatus("error"); return; }
         if (data.customer_name) built.name = data.customer_name;
@@ -160,7 +157,14 @@ export default function OrderConfirmation() {
   // ---------- LOADING ----------
   if (status === "loading") {
     return (
-      <section className="min-h-[60vh] flex items-center justify-center px-4 bg-black text-white">
+      <section
+        className="min-h-[60vh] flex items-center justify-center px-4 text-white"
+        style={{
+          backgroundImage: "linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url('/flavour_bg.webp')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
         <p className="text-white/80">Confirming your order…</p>
       </section>
     );
@@ -169,7 +173,14 @@ export default function OrderConfirmation() {
   // ---------- ERROR / NOT VERIFIED ----------
   if (status === "error" || !order) {
     return (
-      <section className="min-h-[60vh] flex items-center justify-center px-4 bg-black text-white">
+      <section
+        className="min-h-[60vh] flex items-center justify-center px-4 text-white"
+        style={{
+          backgroundImage: "linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url('/flavour_bg.webp')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
         <div className="max-w-md text-center">
           <h1 className="text-2xl font-bold">We couldn't confirm your order</h1>
           <p className="mt-3 text-white/75 text-sm leading-relaxed">
@@ -182,69 +193,74 @@ export default function OrderConfirmation() {
     );
   }
 
-  const isSub = order.paymentMethod.toLowerCase().includes("weekly gut punch");
+  const params = new URLSearchParams(window.location.search);
+  const isSub = params.get("provider") === "stripe_sub";
 
   // ---------- SUCCESS ----------
   return (
-    <section className="relative min-h-[70vh] py-12 px-4 bg-black text-white overflow-hidden">
+    <section
+      className="relative min-h-[70vh] py-16 px-4 flex items-center justify-center text-white overflow-hidden"
+      style={{
+        backgroundImage: "linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url('/flavour_bg.webp')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
       <ConfettiOverlay />
-      <div className="relative z-10 mx-auto max-w-lg rounded-2xl border border-white/15 p-6" style={{ backgroundColor: "rgba(0,0,0,0.55)" }}>
-        <h1 className="text-2xl font-bold">{isSub ? "Subscription confirmed" : "Order confirmed"}</h1>
-        <p className="text-sm text-white/80 mt-1">
+
+      <div className="relative z-10 w-full max-w-md text-center">
+        <h1 className="text-3xl font-bold">{isSub ? "Subscription confirmed" : "Order confirmed"}</h1>
+        <p className="mt-2 text-white/80">
           {isSub
             ? <>Thank you, {order.name}. Your <span className="font-semibold">Weekly Gut Punch</span> subscription is live.</>
             : <>Thank you for your order, {order.name}.</>}
         </p>
 
-        <div className="mt-3 rounded-xl bg-black/40 border border-white/15 px-4 py-3 text-sm">
-          <div className="text-white/60">{isSub ? "Subscription reference" : "Order reference"}</div>
-          <div className="font-mono font-semibold tracking-wide break-all">{order.orderId || "—"}</div>
+        <div className="mt-8">
+          <div className="text-white/50 text-xs uppercase tracking-wider">{isSub ? "Subscription reference" : "Order reference"}</div>
+          <div className="mt-1 font-mono font-semibold text-lg tracking-wide break-all">{order.orderId || "—"}</div>
         </div>
 
-        <div className="my-4 border-t border-white/20" />
-
-        <div className="grid sm:grid-cols-2 gap-4 text-sm">
+        <div className="mt-6 space-y-4">
           <div>
-            <div className="text-white/60">{isSub ? "First dispatch" : "Dispatch date"}</div>
-            <div className="font-medium">{order.formattedDate}</div>
+            <div className="text-white/50 text-xs uppercase tracking-wider">{isSub ? "First dispatch" : "Dispatch date"}</div>
+            <div className="mt-0.5 font-medium">{order.formattedDate}</div>
           </div>
-          <div>
-            <div className="text-white/60">{isSub ? "Billing" : "Payment method"}</div>
-            <div className="font-medium">{isSub ? <>Weekly · charged on <span className="font-semibold">Monday</span></> : order.paymentMethod}</div>
-          </div>
-          <div>
-            <div className="text-white/60">{isSub ? "Weekly price" : "Total paid"}</div>
-            <div className="font-semibold text-emerald-400">{order.totalText}</div>
-          </div>
-        </div>
 
-        <div className="mt-4 text-sm">
-          <div className="text-white/60 mb-1">Delivery address</div>
-          <div className="leading-relaxed">{order.address}</div>
-        </div>
-
-        <div className="mt-5 rounded-2xl bg-black/40 border border-white/15 p-4 text-sm">
-          <div className="font-semibold mb-2">{isSub ? "What you'll receive each week" : "Order summary"}</div>
-          <div className="space-y-1 text-white/85">
-            {order.lines.map((line, i) => (<div key={i}>• {line}</div>))}
+          <div>
+            <div className="text-white/50 text-xs uppercase tracking-wider">{isSub ? "Weekly price" : "Total paid"}</div>
+            <div className="mt-0.5 font-semibold text-emerald-400">{order.totalText}</div>
           </div>
-          {isSub && (
-            <div className="mt-3 text-white/70 text-xs leading-relaxed">
-              We alternate PRCXN and SPCTRL by week. Your yoghurt is fermented on the day before dispatch for freshness. Delivery is £4.95 for Weekly Gut Punch.
+
+          <div>
+            <div className="text-white/50 text-xs uppercase tracking-wider">Delivery address</div>
+            <div className="mt-0.5 leading-relaxed">{order.address}</div>
+          </div>
+
+          <div>
+            <div className="text-white/50 text-xs uppercase tracking-wider">{isSub ? "What you'll receive each week" : "Order summary"}</div>
+            <div className="mt-1 space-y-0.5 text-white/90">
+              {order.lines.map((line, i) => (<div key={i}>{line}</div>))}
             </div>
-          )}
+          </div>
         </div>
 
-        <p className="mt-4 text-xs text-white/70 leading-relaxed">
+        {isSub && (
+          <p className="mt-6 text-white/60 text-xs leading-relaxed">
+            We alternate PRCXN and SPCTRL by week. Your yoghurt is fermented on the day before dispatch for freshness. Delivery is £4.95 for Weekly Gut Punch.
+          </p>
+        )}
+
+        <p className="mt-6 text-xs text-white/60 leading-relaxed">
           Your yoghurt is fermented on the day before dispatch for freshness. You'll receive an email receipt with full order details shortly. If it doesn't arrive within 5 minutes, please check spam. Questions? Email support@yoghurtofyouth.co.uk.
         </p>
         {isSub && (
-          <p className="mt-3 text-xs text-white/70 leading-relaxed">
+          <p className="mt-3 text-xs text-white/60 leading-relaxed">
             To cancel, email support@yoghurtofyouth.co.uk with your name and address and we'll cancel your subscription shortly.
           </p>
         )}
 
-        <a href="/" className="mt-6 inline-block w-full text-center rounded-2xl bg-white text-black py-3 text-sm font-semibold hover:bg-amber-300 transition">
+        <a href="/" className="inline-block mt-8 rounded-2xl bg-white text-black px-6 py-2.5 text-sm font-semibold hover:bg-amber-300 transition">
           Continue shopping
         </a>
       </div>

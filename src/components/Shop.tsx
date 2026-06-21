@@ -16,10 +16,10 @@ const gbp = (n: number) =>
 const cn = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(" ");
 
 const PRODUCTS = [
-  { id: "PLN", name: "PLN", price: 0.01, size: "250 mL", img: "/plain.webp" },
-  { id: "BFC", name: "BFC", price: 2.05, size: "250 mL", img: "/bfc.webp" },
-  { id: "STR", name: "STR", price: 2.05, size: "250 mL", img: "/str.webp" },
-  { id: "MNG", name: "MNG", price: 2.05, size: "250 mL", img: "/mng.webp" },
+  { id: "PLN", name: "PLN", price: 2.8, size: "250 mL", img: "/plain.webp" },
+  { id: "BFC", name: "BFC", price: 2.9, size: "250 mL", img: "/bfc.webp" },
+  { id: "STR", name: "STR", price: 2.9, size: "250 mL", img: "/str.webp" },
+  { id: "MNG", name: "MNG", price: 2.9, size: "250 mL", img: "/mng.webp" },
 ];
 
 // ===================== TOTALS =====================
@@ -44,8 +44,8 @@ function computeTotals(
   const plainQty = plainItems.reduce((s, i) => s + i.qty, 0);
   const flavQty = flavItems.reduce((s, i) => s + i.qty, 0);
 
-  const plainUnit = plainItems[0]?.price ?? 0.01;
-  const flavUnit = flavItems[0]?.price ?? 2.05;
+  const plainUnit = plainItems[0]?.price ?? 2.8;
+  const flavUnit = flavItems[0]?.price ?? 2.9;
 
   const plainSubtotalRaw = plainQty * plainUnit;
   const flavSubtotalRaw = flavQty * flavUnit;
@@ -62,7 +62,7 @@ function computeTotals(
   const fullPrice = plainSubtotalRaw + flavSubtotalRaw;
   const savings = Math.max(0, fullPrice - merchTotal);
 
-  const deliveryFee = merchTotal === 0 ? 0 : 0.51;
+  const deliveryFee = merchTotal === 0 ? 0 : 4.95;
 
   const discount = discountPercent > 0 ? Math.round(merchTotal * discountPercent) / 100 : 0;
   const total = merchTotal - discount + deliveryFee;
@@ -140,11 +140,11 @@ function nextEligibleMondayISO(): string {
 }
 
 const SUBSCRIPTION_PLANS = [
-  { key: "PLN", label: "PLN (plain)", priceLabel: "£10.53", bg: "bg-white/15" },
-  { key: "BFC", label: "BFC (black forest)", priceLabel: "£11.07", bg: "bg-rose-900/40" },
-  { key: "STR", label: "STR (strawberry)", priceLabel: "£11.07", bg: "bg-pink-500/35" },
-  { key: "MNG", label: "MNG (mango)", priceLabel: "£11.07", bg: "bg-amber-300/45" },
-  { key: "MIX", label: "MIX (mixed)", priceLabel: "£11.07", bg: "MIX_STRIPES" },
+  { key: "PLN", label: "PLN (plain)", priceLabel: "£15.12", bg: "bg-white/15" },
+  { key: "BFC", label: "BFC (black forest)", priceLabel: "£15.66", bg: "bg-rose-900/40" },
+  { key: "STR", label: "STR (strawberry)", priceLabel: "£15.66", bg: "bg-pink-500/35" },
+  { key: "MNG", label: "MNG (mango)", priceLabel: "£15.66", bg: "bg-amber-300/45" },
+  { key: "MIX", label: "MIX (mixed)", priceLabel: "£15.66", bg: "MIX_STRIPES" },
 ] as const;
 type SubscriptionPlan = (typeof SUBSCRIPTION_PLANS)[number];
 
@@ -362,12 +362,12 @@ export default function Shop() {
                       <span className="relative z-10 w-6 text-center text-sm font-semibold qty-flash">{displayQty[f.id] || 0}</span>
                       <button
                         onClick={() => {
-                          if (f.id === ids.PLN) { storeSetQty(ids.PLN, qty(ids.PLN) + 7); bumpDisplay(f.id, 1); trackAddToCart("PLN", 7 * 0.01, 7); return; }
-                          if (f.id === ids.BFC) { storeSetQty(ids.BFC, qty(ids.BFC) + 7); bumpDisplay(f.id, 1); trackAddToCart("BFC", 7 * 2.05, 7); return; }
-                          if (f.id === ids.STR) { storeSetQty(ids.STR, qty(ids.STR) + 7); bumpDisplay(f.id, 1); trackAddToCart("STR", 7 * 2.05, 7); return; }
-                          if (f.id === ids.MNG) { storeSetQty(ids.MNG, qty(ids.MNG) + 7); bumpDisplay(f.id, 1); trackAddToCart("MNG", 7 * 2.05, 7); return; }
-                          if (f.id === "TASTER") { incPreset("TASTER"); trackAddToCart("Taster", 0.01 + 2.05 * 3, 4); return; }
-                          if (f.id === "MIX") { incPreset("MIX"); trackAddToCart("Mixed", 2.05 * 7, 7); return; }
+                          if (f.id === ids.PLN) { storeSetQty(ids.PLN, qty(ids.PLN) + 7); bumpDisplay(f.id, 1); trackAddToCart("PLN", 7 * 2.8, 7); return; }
+                          if (f.id === ids.BFC) { storeSetQty(ids.BFC, qty(ids.BFC) + 7); bumpDisplay(f.id, 1); trackAddToCart("BFC", 7 * 2.9, 7); return; }
+                          if (f.id === ids.STR) { storeSetQty(ids.STR, qty(ids.STR) + 7); bumpDisplay(f.id, 1); trackAddToCart("STR", 7 * 2.9, 7); return; }
+                          if (f.id === ids.MNG) { storeSetQty(ids.MNG, qty(ids.MNG) + 7); bumpDisplay(f.id, 1); trackAddToCart("MNG", 7 * 2.9, 7); return; }
+                          if (f.id === "TASTER") { incPreset("TASTER"); trackAddToCart("Taster", 2.8 + 2.9 * 3, 4); return; }
+                          if (f.id === "MIX") { incPreset("MIX"); trackAddToCart("Mixed", 2.9 * 7, 7); return; }
                         }}
                         className="relative z-10 w-5 h-5 sm:w-6 sm:h-6 grid place-items-center rounded-lg bg-white text-slate-900 hover:bg-slate-200 transition leading-none"
                         aria-label="Add"
@@ -382,7 +382,7 @@ export default function Shop() {
 
             <div className="mt-2 text-xs text-white space-y-1.5">
               <p className="flex flex-wrap items-center gap-2">
-                <span>PLN: <strong>£1.95</strong> each · <strong>7 for the price of 6</strong></span>
+                <span>PLN: <strong>£2.80</strong> each · <strong>7 for the price of 6</strong></span>
                 {totalPlain > 0 ? (
                   <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs shadow-md backdrop-blur-md", plainOnBundle ? "bg-emerald-500/80 text-slate-900" : "bg-black/60 text-white")}>
                     In basket:&nbsp;<strong>{totalPlain}</strong>
@@ -392,7 +392,7 @@ export default function Shop() {
                 )}
               </p>
               <p className="flex flex-wrap items-center gap-2">
-                <span>BFC, STR &amp; MNG: <strong>£2.05</strong> each · <strong>7 for the price of 6</strong></span>
+                <span>BFC, STR &amp; MNG: <strong>£2.90</strong> each · <strong>7 for the price of 6</strong></span>
                 {totalFlavoured > 0 ? (
                   <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs shadow-md backdrop-blur-md", flavOnBundle ? "bg-emerald-500/80 text-slate-900" : "bg-black/60 text-white")}>
                     In basket:&nbsp;<strong>{totalFlavoured}</strong>
@@ -530,9 +530,9 @@ function Basket({ items, qtyTotal, total, savings, plainBundles, flavBundles, pl
       ))}
       <div className="border-t border-white/20 pt-4 space-y-2 text-sm text-white/80">
         <div className="flex justify-between"><span>Bottles</span><span>{qtyTotal}</span></div>
-        {plainRemainder > 0 && <div className="flex justify-between"><span>PLN</span><span>{plainRemainder} × £1.95</span></div>}
+        {plainRemainder > 0 && <div className="flex justify-between"><span>PLN</span><span>{plainRemainder} × £2.80</span></div>}
         {plainBundles > 0 && <div className="flex justify-between"><span>Free PLN (7 for 6)</span><span>{plainBundles}</span></div>}
-        {flavRemainder > 0 && <div className="flex justify-between"><span>Flavoured</span><span>{flavRemainder} × £2.05</span></div>}
+        {flavRemainder > 0 && <div className="flex justify-between"><span>Flavoured</span><span>{flavRemainder} × £2.90</span></div>}
         {flavBundles > 0 && <div className="flex justify-between"><span>Free flavoured (7 for 6)</span><span>{flavBundles}</span></div>}
         {savings > 0 && <div className="flex justify-between text-emerald-400"><span>You save</span><span>−{gbp(savings)}</span></div>}
         <div className="flex justify-between font-semibold text-white"><span>Total due to be paid</span><span>{gbp(merchTotal)}</span></div>
@@ -716,9 +716,9 @@ function PayModal({ onClose, cart, payKind = "oneoff", subscriptionPlan }: { onC
             <div>{lines.map((l, i) => (<div key={i}>• {l}</div>))}</div>
             <div>
               <div className="mb-1">Bottles: {qtyTotal}</div>
-              {plainRemainder > 0 && <div>PLN: {plainRemainder} × £1.95</div>}
+              {plainRemainder > 0 && <div>PLN: {plainRemainder} × £2.80</div>}
               {plainBundles > 0 && <div>Free PLN (7 for 6): {plainBundles}</div>}
-              {flavRemainder > 0 && <div>Flavoured: {flavRemainder} × £2.05</div>}
+              {flavRemainder > 0 && <div>Flavoured: {flavRemainder} × £2.90</div>}
               {flavBundles > 0 && <div>Free flavoured (7 for 6): {flavBundles}</div>}
               {deliveryFee > 0 && <div className="mt-1">Delivery: {gbp(deliveryFee)}</div>}
               {totalsWithGift.discount > 0 && (<div className="flex justify-between text-emerald-400 mt-1"><span>{normalizedGiftCode} (10% off)</span><span>−{gbp(totalsWithGift.discount)}</span></div>)}
