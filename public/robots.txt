@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://yoghurtofyouth.co.uk/sitemap-index.xml
