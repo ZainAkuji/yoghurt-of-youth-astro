@@ -74,8 +74,14 @@ export default function Header({ brand }: { brand: string }) {
                   {scienceOpen && (
                     <div className="absolute left-1/2 -translate-x-1/2 mt-4 w-52 rounded-xl bg-black/40 backdrop-blur-xs border border-white/15 shadow-2xl py-2 z-50">
                       <a
+                        href="/theory"
+                        className="block px-4 py-2 text-sm text-center text-white hover:bg-white/10 hover:text-amber-300 transition-colors"
+                      >
+                        A Theory of Gut Dysbiosis
+                      </a>
+                      <a
                         href="/nac"
-                        className="block text-center px-4 py-2 text-sm text-white hover:bg-white/10 hover:text-amber-300 transition-colors"
+                        className="block px-4 py-2 text-sm text-center text-white hover:bg-white/10 hover:text-amber-300 transition-colors"
                       >
                         NAC, Biofilms &amp; Gut Health
                       </a>
