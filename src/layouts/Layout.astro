@@ -8,7 +8,34 @@ interface Props {
   description: string;
 }
 
-const { title, description } = Astro.props;
+const { title, description, productSchema } = Astro.props;
+
+const orgSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Yoghurt of Youth",
+  "url": "https://yoghurtofyouth.co.uk",
+  "logo": "https://yoghurtofyouth.co.uk/logo.png",
+  "description": "Fresh-fermented live L. reuteri probiotic yoghurt, lactose-free and made in small batches in Blackburn with UK-wide chilled next-day delivery.",
+  "email": "support@yoghurtofyouth.co.uk",
+  "telephone": "+44-7756-231844",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Blackburn",
+    "addressRegion": "Lancashire",
+    "addressCountry": "GB"
+  },
+  "sameAs": [
+    "https://www.instagram.com/yoghurtofyouth"
+  ]
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Yoghurt of Youth",
+  "url": "https://yoghurtofyouth.co.uk"
+};
 ---
 
 <!doctype html>
@@ -46,6 +73,10 @@ const { title, description } = Astro.props;
 
 	<!-- Klaviyo onsite -->
     <script is:inline async type="text/javascript" src="https://static.klaviyo.com/onsite/js/VxBsdc/klaviyo.js"></script>
+
+	<script type="application/ld+json" set:html={JSON.stringify(orgSchema)} />
+    <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
+	{productSchema && <script type="application/ld+json" set:html={JSON.stringify(productSchema)} />}
   </head>
   <body class="min-h-screen bg-gradient-to-b from-white to-slate-50 text-slate-800">
     <!-- Header is interactive (scroll-shrink), so it runs as a React island -->
