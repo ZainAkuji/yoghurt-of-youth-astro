@@ -72,12 +72,18 @@ export default function Header({ brand }: { brand: string }) {
                   </button>
 
                   {scienceOpen && (
-                    <div className="absolute left-1/2 -translate-x-1/2 mt-4 w-52 rounded-xl bg-black/40 backdrop-blur-xs border border-white/15 shadow-2xl py-2 z-50">
+                    <div className="absolute left-1/2 -translate-x-1/2 mt-4 w-60 rounded-xl bg-black/40 backdrop-blur-xs border border-white/15 shadow-2xl py-2 z-50">
                       <a
                         href="/theory"
                         className="block px-4 py-2 text-sm text-center text-white hover:bg-white/10 hover:text-amber-300 transition-colors"
                       >
                         A Theory of Gut Dysbiosis
+                      </a>
+                      <a
+                        href="/compare"
+                        className="block px-4 py-2 text-sm text-center text-white hover:bg-white/10 hover:text-amber-300 transition-colors"
+                      >
+                        L reuteri vs Fermented Foods
                       </a>
                       <a
                         href="/nac"
