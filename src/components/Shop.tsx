@@ -140,11 +140,11 @@ function nextEligibleMondayISO(): string {
 }
 
 const SUBSCRIPTION_PLANS = [
-  { key: "PLN", label: "PLN (plain)", priceLabel: "£15.12", bg: "bg-white/15" },
-  { key: "BFC", label: "BFC (black forest)", priceLabel: "£15.66", bg: "bg-rose-900/40" },
-  { key: "STR", label: "STR (strawberry)", priceLabel: "£15.66", bg: "bg-pink-500/35" },
-  { key: "MNG", label: "MNG (mango)", priceLabel: "£15.66", bg: "bg-amber-300/45" },
-  { key: "MIX", label: "MIX (mixed)", priceLabel: "£15.66", bg: "MIX_STRIPES" },
+  { key: "PLN", label: "PLN", priceLabel: "£15.12", wasLabel: "£16.80", bg: "bg-white/15" },
+  { key: "BFC", label: "BFC", priceLabel: "£15.66", wasLabel: "£17.40", bg: "bg-rose-900/40" },
+  { key: "STR", label: "STR", priceLabel: "£15.66", wasLabel: "£17.40", bg: "bg-pink-500/35" },
+  { key: "MNG", label: "MNG", priceLabel: "£15.66", wasLabel: "£17.40", bg: "bg-amber-300/45" },
+  { key: "MIX", label: "MIX", priceLabel: "£15.66", wasLabel: "£17.40", bg: "MIX_STRIPES" },
 ] as const;
 type SubscriptionPlan = (typeof SUBSCRIPTION_PLANS)[number];
 
@@ -291,41 +291,66 @@ export default function Shop() {
             <p>This week is <strong>{thisWeekBrand}</strong> week; next week is <strong>{nextWeekBrand}</strong> week.</p>
             <p>UK-wide chilled next-day delivery available for <strong>£4.95</strong>. Dispatched on <strong>Monday</strong> and <strong>Thursday</strong>.</p>
             <p>Fermented on the day before dispatch for freshness.</p>
+            <a
+              href="https://g.page/r/CWkxtud6iKYlEAE/review"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 mt-2 rounded-full bg-black/40 border border-white/15 px-3 py-1.5 backdrop-blur-sm hover:bg-black/55 transition-colors"
+            >
+              <span className="text-lg text-amber-300 leading-none">★★★★★</span>
+              <span className="text-lg font-semibold text-white">
+                5.0 on{" "}
+                <span className="text-[#4285F4]">G</span><span className="text-[#EA4335]">o</span><span className="text-[#FBBC05]">o</span><span className="text-[#4285F4]">g</span><span className="text-[#34A853]">l</span><span className="text-[#EA4335]">e</span>
+              </span>
+            </a>
           </div>
 
           <div className="mt-6 bg-black/40 rounded-2xl border border-white/10 p-3 sm:p-4 backdrop-blur-sm">
             <div className="text-sm sm:text-base text-white max-w-4xl space-y-1.5">
-              <p>Browse our selection.</p>
-              <p><strong>Taster</strong> consists of 1 of each flavour. Each flavour option consists of <strong>7 bottles</strong>. <strong>Mixed</strong> consists of <strong>2 BFC</strong> (black forest chocolate), <strong>3 STR</strong> (strawberry), and <strong>2 MNG</strong> (mango).</p>
+              <p>Browse our selection:</p>
+              <ul className="list-disc list-inside">
+                <li>🥛 <strong>PLN</strong> plain</li>
+                <li>🍫 <strong>BFC</strong> black forest chocolate</li>
+                <li>🍓 <strong>STR</strong> strawberry</li>
+                <li>🥭 <strong>MNG</strong> mango</li>
+              </ul>
+              <p><strong>Taster</strong> consists of 1 of each flavour.</p>
+              <p>Each flavour option consists of <strong>7 bottles</strong>.</p>
+              <p><strong>Mixed</strong> consists of <strong>2 BFC</strong>, <strong>3 STR</strong>, and <strong>2 MNG</strong>.</p>
               <p>Click on a flavour header to view the nutrition information.</p>
               <p>Click on the <strong>basket icon</strong> on the top right to complete your purchase.</p>
             </div>
 
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-px text-sm text-white">
               {[
-                { id: "TASTER", label: "Taster", bg: "TASTER_STRIPES" as const },
-                { id: ids.PLN, label: "PLN (plain)", bg: "bg-white/15", nutritionSrc: "/pln_nutrition.png" },
-                { id: ids.BFC, label: "BFC (black forest)", bg: "bg-rose-900/40", nutritionSrc: "/bfc_nutrition.png" },
-                { id: ids.STR, label: "STR (strawberry)", bg: "bg-pink-500/35", nutritionSrc: "/str_nutrition.png" },
-                { id: ids.MNG, label: "MNG (mango)", bg: "bg-amber-300/45", nutritionSrc: "/mng_nutrition.png" },
-                { id: "MIX", label: "Mixed", bg: "MIX_STRIPES" as const },
+                { id: "TASTER", label: "Taster", bg: "TASTER_STRIPES" as const, price: "£11.50" },
+                { id: ids.PLN, label: "PLN", bg: "bg-white/15", nutritionSrc: "/pln_nutrition.png", price: "£16.80" },
+                { id: ids.BFC, label: "BFC", bg: "bg-rose-900/40", nutritionSrc: "/bfc_nutrition.png", price: "£17.40" },
+                { id: ids.STR, label: "STR", bg: "bg-pink-500/35", nutritionSrc: "/str_nutrition.png", price: "£17.40" },
+                { id: ids.MNG, label: "MNG", bg: "bg-amber-300/45", nutritionSrc: "/mng_nutrition.png", price: "£17.40" },
+                { id: "MIX", label: "MIX", bg: "MIX_STRIPES" as const, price: "£17.40" },
               ].map((f) => {
                 const isPreset = f.id === "TASTER" || f.id === "MIX";
                 const isMix = f.bg === "MIX_STRIPES";
                 const isTaster = f.bg === "TASTER_STRIPES";
                 return (
                   <div key={f.id} className="grid grid-rows-[auto,auto] gap-px">
-                    {isPreset ? (
-                      <div className="bg-black/70 px-2 py-1.5 font-semibold text-center">{f.label}</div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setNutritionModal({ title: `${f.label} – Nutrition`, src: (f as any).nutritionSrc })}
-                        className="bg-black/70 px-2 py-1.5 font-semibold text-center hover:bg-black/50 hover:text-amber-300 transition-colors"
-                      >
-                        {f.label}
-                      </button>
-                    )}
+                    <div className="grid grid-cols-4">
+                      {isPreset ? (
+                        <div className="col-span-3 bg-black/70 px-2 py-1.5 font-semibold text-center">{f.label}</div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setNutritionModal({ title: `${f.label} – Nutrition`, src: (f as any).nutritionSrc })}
+                          className="col-span-3 bg-black/70 px-2 py-1.5 font-semibold text-center hover:bg-black/50 hover:text-amber-300 transition-colors"
+                        >
+                          {f.label}
+                        </button>
+                      )}
+                      <div className="col-span-1 bg-slate-700 px-1 py-1.5 text-sm font-semibold text-center text-white flex items-center justify-center">
+                        {f.price}
+                      </div>
+                    </div>
                     <div className={cn("relative px-2 py-2 flex items-center justify-center gap-2", !isMix && !isTaster && (f as any).bg)}>
                       {isMix && (
                         <>
@@ -382,7 +407,7 @@ export default function Shop() {
 
             <div className="mt-2 text-xs text-white space-y-1.5">
               <p className="flex flex-wrap items-center gap-2">
-                <span>PLN: <strong>£2.80</strong> each · <strong>7 for the price of 6</strong></span>
+                <span>PLN: <strong>£2.80</strong> each · <strong>7 for 6</strong></span>
                 {totalPlain > 0 ? (
                   <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs shadow-md backdrop-blur-md", plainOnBundle ? "bg-emerald-500/80 text-slate-900" : "bg-black/60 text-white")}>
                     In basket:&nbsp;<strong>{totalPlain}</strong>
@@ -392,7 +417,7 @@ export default function Shop() {
                 )}
               </p>
               <p className="flex flex-wrap items-center gap-2">
-                <span>BFC, STR &amp; MNG: <strong>£2.90</strong> each · <strong>7 for the price of 6</strong></span>
+                <span>BFC, STR &amp; MNG: <strong>£2.90</strong> each · <strong>7 for 6</strong></span>
                 {totalFlavoured > 0 ? (
                   <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs shadow-md backdrop-blur-md", flavOnBundle ? "bg-emerald-500/80 text-slate-900" : "bg-black/60 text-white")}>
                     In basket:&nbsp;<strong>{totalFlavoured}</strong>
@@ -409,9 +434,9 @@ export default function Shop() {
 
           {/* ===================== PART 3: WEEKLY GUT PUNCH ===================== */}
           <div className="mt-8 bg-black/40 rounded-2xl border border-white/10 p-3 sm:p-4 backdrop-blur-sm">
-            <h3 className="text-xl sm:text-2xl font-bold mb-2">Weekly Gut Punch</h3>
+            <h3 className="text-xl sm:text-2xl font-bold mb-2">Weekly Gut Punch · Subscribe and Save <span className="text-amber-300">10%</span></h3>
             <div className="text-sm sm:text-base text-white max-w-4xl space-y-1.5">
-              <p><strong>Subscribe and save.</strong> Receive <strong>7 bottle of yoghurts every week</strong> at a <strong>10% discount</strong>, fermented the day before dispatch for freshness.</p>
+              <p>Receive <strong>7 bottles of yoghurt every week</strong> at a <strong>10% discount</strong>, fermented the day before dispatch for freshness.</p>
               <p>Your first batch will be dispatched on the coming <strong>available Monday</strong>. Book by <strong>Saturday evening</strong> for the <strong>coming Monday</strong>.</p>
               <p>You will be charged <strong>every week</strong> on the day of dispatch. Pause or cancel anytime by emailing <a href="mailto:support@yoghurtofyouth.co.uk" className="underline hover:text-slate-900">support@yoghurtofyouth.co.uk</a>.</p>
               <p>We alternate between <strong>PRCXN</strong> and <strong>SPCTRL</strong> yoghurt variants every week.</p>
@@ -432,7 +457,10 @@ export default function Shop() {
                       <div className={cn("relative px-2 py-3 flex items-center justify-center font-semibold transition-all duration-200 ease-out hover:brightness-125 active:brightness-150 hover:ring-1 hover:ring-white/30 active:ring-white/45", !isMix && (p.key === "PLN" ? "bg-white/15 hover:bg-white/20 active:bg-white/25" : p.bg))}>
                         {isMix && (<div className="absolute inset-0 grid grid-cols-3"><div className="bg-rose-900/40" /><div className="bg-pink-500/35" /><div className="bg-amber-300/45" /></div>)}
                         {isMix && <div className="absolute inset-0 bg-black/25" />}
-                        <span className="relative z-10">{p.priceLabel}</span>
+                        <span className="relative z-10 flex items-baseline gap-1.5">
+                          <span className="text-white/70 line-through text-xs">{p.wasLabel}</span>
+                          <span>{p.priceLabel}</span>
+                        </span>
                       </div>
                     </button>
                   );
@@ -572,7 +600,7 @@ function Modal({ onClose, title, children }: { onClose: () => void; title: strin
 function PayModal({ onClose, cart, payKind = "oneoff", subscriptionPlan }: { onClose: () => void; cart: Record<string, number>; payKind?: "oneoff" | "subscription"; subscriptionPlan?: SubscriptionPlan | null }) {
   const isSubscription = payKind === "subscription" && !!subscriptionPlan;
   const firstISO = nextEligibleMondayISO();
-  const firstText = `${formatDateUK(firstISO)} (${weekdayFromISO(firstISO)})`;
+  const firstText = `${formatDateUK(firstISO)} ${weekdayFromISO(firstISO)}`;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -673,8 +701,20 @@ function PayModal({ onClose, cart, payKind = "oneoff", subscriptionPlan }: { onC
     return (
       <Modal onClose={onClose} title="Weekly Gut Punch">
         <p className="text-sm text-white">
-          You're subscribing to <span className="font-semibold">{subscriptionPlan.label}</span> Weekly Gut Punch. We dispatch your first batch on <span className="font-semibold">{firstText}</span> then every following <span className="font-semibold">Monday</span>. We deliver UK-wide, and use DPD Next Day delivery. The weekly delivery charge is <span className="font-semibold">£4.95</span>. Please fill in your contact and delivery details securely on the next step.
+          You're subscribing to <span className="font-semibold">{subscriptionPlan.label}</span> Weekly Gut Punch. We deliver UK-wide and use DPD Next Day delivery. The weekly delivery charge is <span className="font-semibold">£4.95</span>. Please fill in your contact and delivery details securely on the next step.
         </p>
+        <div className="mt-3 pl-3 text-sm text-white/80">
+          First dispatch: <span className="font-semibold text-white">{firstText}</span>, then every following <span className="font-semibold text-white">Monday</span>
+        </div>
+        <div className="mt-2 pl-3 text-sm text-white/80">Fermented fresh the day before · Made in UK</div>
+        <div className="mt-4">
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Order note (optional)"
+            className="w-full rounded-xl border border-white/30 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-white/40"
+          />
+        </div>
         {error && <p className="mt-3 text-sm text-rose-300">{error}</p>}
         <div className="mt-5 flex flex-col sm:flex-row gap-3">
           <button disabled={sending} onClick={startCheckout} className="sm:w-72 h-12 rounded-2xl px-1 text-sm font-semibold text-white bg-[#635BFF] hover:bg-[#5147ff] transition flex items-center justify-center">
@@ -684,7 +724,10 @@ function PayModal({ onClose, cart, payKind = "oneoff", subscriptionPlan }: { onC
           </button>
           <button onClick={onClose} className="sm:w-72 h-12 rounded-2xl border border-white/30 px-1 py-3 text-sm font-semibold text-white hover:bg-white/10 transition">Cancel</button>
         </div>
-        <p className="mt-3 text-center text-xs text-white/50">Secure checkout · payments processed by Stripe</p>
+        <div className="mt-3 text-center">
+          <p className="text-xs text-white/50">🔒 Secure checkout · payments processed by Stripe</p>
+          <p className="text-amber-300 text-sm mt-1">★★★★★</p>
+        </div>
       </Modal>
     );
   }
@@ -693,10 +736,18 @@ function PayModal({ onClose, cart, payKind = "oneoff", subscriptionPlan }: { onC
   return (
     <Modal onClose={onClose} title="Checkout & Delivery">
       <p className="text-sm text-white/80">Fill in below, then continue to payment, where you will also enter your contact and delivery details. We deliver UK-wide, dispatch every <span className="font-semibold">Monday</span> & <span className="font-semibold">Thursday</span>, and use DPD Next Day delivery.</p>
-      <div className="mt-4 grid md:grid-cols-2 gap-4">
-        <div className="md:col-span-2 pl-3 text-sm text-white/80">Dispatch date: <span className="font-semibold text-white">{formatDateUK(date)} ({weekdayFromISO(date)})</span></div>
-        <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Order note (optional)" className="rounded-xl border border-white/30 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-white/40 md:col-span-2" />
+      <div className="mt-3 pl-3 text-sm text-white/80">
+        Dispatch date: <span className="font-semibold text-white">{formatDateUK(date)} {weekdayFromISO(date)}</span>
       </div>
+      <div className="mt-2 pl-3 text-sm text-white/80">
+        Fermented <strong>fresh</strong> the day before · Made in UK
+      </div>
+      <input
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        placeholder="Order note (optional)"
+        className="mt-4 w-full rounded-xl border border-white/30 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-white/40"
+      />
       <div className="mt-4 md:col-span-2">
         <div className="flex gap-2">
           <input value={giftCode} onChange={(e) => setGiftCode(e.target.value)} placeholder="Enter gift code" className="flex-1 rounded-xl border border-white/30 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-white/40" />
@@ -737,7 +788,10 @@ function PayModal({ onClose, cart, payKind = "oneoff", subscriptionPlan }: { onC
         </button>
         <button onClick={onClose} className="sm:w-72 h-12 rounded-2xl border border-white/30 px-1 py-3 text-sm font-semibold text-white hover:bg-white/10 transition">Cancel</button>
       </div>
-      <p className="mt-3 text-center text-xs text-white/50">Secure checkout · payments processed by Stripe</p>
+      <div className="mt-3 text-center">
+        <p className="text-xs text-white/50">🔒 Secure checkout · payments processed by Stripe</p>
+        <p className="text-amber-300 text-sm mt-1">★★★★★</p>
+      </div>
     </Modal>
   );
 }
