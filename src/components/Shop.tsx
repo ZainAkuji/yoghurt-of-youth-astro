@@ -291,16 +291,19 @@ export default function Shop() {
             <p>This week is <strong>{thisWeekBrand}</strong> week, and next week is <strong>{nextWeekBrand}</strong> week.</p>
             <p>UK-wide next-day delivery available for <strong>£4.95</strong>.</p>
             <p>We dispatch on <strong>Mondays</strong> and <strong>Thursdays</strong> only.</p>
-            <p>We ferment the yoghurt the day before dispatch and pack every order in <strong>insulated</strong> and <strong>❄️chilled packaging❄️</strong>, so it reaches you cold and fresh.</p>
+            <p>We ferment the yoghurt the day before dispatch and pack the order in <strong>insulated</strong> and <strong>❄️chilled packaging❄️</strong>, so it reaches you cold and fresh.</p>
+            <p className="text-sm sm:text-base">
+              Curious how it works? <strong><a href="/about" className="underline hover:text-amber-300 transition">Read the science behind our strains</a></strong>.
+            </p>
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <a
                 href="https://g.page/r/CWkxtud6iKYlEAE/review"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-black/40 border border-white/15 px-3 py-1.5 backdrop-blur-sm hover:bg-black/55 transition-colors"
+                className="inline-flex items-center gap-2 rounded-full bg-black/40 border border-white/15 px-3 py-2 backdrop-blur-sm hover:bg-black/55 transition-colors"
               >
-                <span className="text-lg text-amber-300 leading-none">★★★★★</span>
-                <span className="text-lg font-semibold text-white">
+                <span className="text-md text-amber-300 leading-none">★★★★★</span>
+                <span className="text-md font-semibold text-white">
                   5.0 on{" "}
                   <span className="text-[#4285F4]">G</span><span className="text-[#EA4335]">o</span><span className="text-[#FBBC05]">o</span><span className="text-[#4285F4]">g</span><span className="text-[#34A853]">l</span><span className="text-[#EA4335]">e</span>
                 </span>
@@ -341,14 +344,14 @@ export default function Shop() {
                 const isTaster = f.bg === "TASTER_STRIPES";
                 return (
                   <div key={f.id} className="grid grid-rows-[auto,auto] gap-px">
-                    <div className="grid grid-cols-4">
+                    <div className="grid grid-cols-3">
                       {isPreset ? (
-                        <div className="col-span-3 bg-black/70 px-2 py-1.5 font-semibold text-center">{f.label}</div>
+                        <div className="col-span-2 bg-black/70 px-2 py-1.5 font-semibold text-center">{f.label}</div>
                       ) : (
                         <button
                           type="button"
                           onClick={() => setNutritionModal({ title: `${f.label} – Nutrition`, src: (f as any).nutritionSrc })}
-                          className="col-span-3 bg-black/70 px-2 py-1.5 font-semibold text-center hover:bg-black/50 hover:text-amber-300 transition-colors"
+                          className="col-span-2 bg-black/70 px-2 py-1.5 font-semibold text-center hover:bg-black/50 hover:text-amber-300 transition-colors"
                         >
                           {f.label}
                         </button>
