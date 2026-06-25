@@ -285,24 +285,30 @@ export default function Shop() {
         }}
       >
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-3">Flavour Selection – {thisWeekBrand}</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4 ml-4">Flavour Selection · <span className="text-amber-300">{thisWeekBrand}</span></h2>
 
-          <div className="text-sm sm:text-base text-white max-w-2xl space-y-1">
-            <p>This week is <strong>{thisWeekBrand}</strong> week; next week is <strong>{nextWeekBrand}</strong> week.</p>
-            <p>UK-wide chilled next-day delivery available for <strong>£4.95</strong>. Dispatched on <strong>Monday</strong> and <strong>Thursday</strong>.</p>
-            <p>Fermented on the day before dispatch for freshness.</p>
-            <a
-              href="https://g.page/r/CWkxtud6iKYlEAE/review"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 mt-2 rounded-full bg-black/40 border border-white/15 px-3 py-1.5 backdrop-blur-sm hover:bg-black/55 transition-colors"
-            >
-              <span className="text-lg text-amber-300 leading-none">★★★★★</span>
-              <span className="text-lg font-semibold text-white">
-                5.0 on{" "}
-                <span className="text-[#4285F4]">G</span><span className="text-[#EA4335]">o</span><span className="text-[#FBBC05]">o</span><span className="text-[#4285F4]">g</span><span className="text-[#34A853]">l</span><span className="text-[#EA4335]">e</span>
-              </span>
-            </a>
+          <div className="bg-black/40 rounded-2xl border border-white/10 p-3 sm:p-4 backdrop-blur-sm text-sm sm:text-base text-white max-w-5xl space-y-1">
+            <p>This week is <strong>{thisWeekBrand}</strong> week, and next week is <strong>{nextWeekBrand}</strong> week.</p>
+            <p>UK-wide next-day delivery available for <strong>£4.95</strong>.</p>
+            <p>We dispatch on <strong>Mondays</strong> and <strong>Thursdays</strong> only.</p>
+            <p>We ferment the yoghurt the day before dispatch and pack every order in <strong>insulated</strong> and <strong>❄️chilled packaging❄️</strong>, so it reaches you cold and fresh.</p>
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <a
+                href="https://g.page/r/CWkxtud6iKYlEAE/review"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-black/40 border border-white/15 px-3 py-1.5 backdrop-blur-sm hover:bg-black/55 transition-colors"
+              >
+                <span className="text-lg text-amber-300 leading-none">★★★★★</span>
+                <span className="text-lg font-semibold text-white">
+                  5.0 on{" "}
+                  <span className="text-[#4285F4]">G</span><span className="text-[#EA4335]">o</span><span className="text-[#FBBC05]">o</span><span className="text-[#4285F4]">g</span><span className="text-[#34A853]">l</span><span className="text-[#EA4335]">e</span>
+                </span>
+              </a>
+              <span className="inline-flex items-center rounded-full bg-black/40 border border-white/15 px-3 py-2 text-md font-semibold text-white backdrop-blur-sm">1 trillion CFU</span>
+              <span className="inline-flex items-center rounded-full bg-black/40 border border-white/15 px-3 py-2 text-md font-semibold text-white backdrop-blur-sm">Lactose-free</span>
+              <span className="inline-flex items-center rounded-full bg-black/40 border border-white/15 px-3 py-2 text-md font-semibold text-white backdrop-blur-sm">No added sweeteners</span>
+            </div>
           </div>
 
           <div className="mt-6 bg-black/40 rounded-2xl border border-white/10 p-3 sm:p-4 backdrop-blur-sm">
