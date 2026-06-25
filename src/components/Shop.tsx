@@ -449,7 +449,7 @@ export default function Shop() {
               <p>Your first batch will be dispatched on the coming <strong>available Monday</strong>. Book by <strong>Saturday evening</strong> for the <strong>coming Monday</strong>.</p>
               <p>You will be charged <strong>every week</strong> on the day of dispatch. Pause or cancel anytime by emailing <a href="mailto:support@yoghurtofyouth.co.uk" className="underline hover:text-slate-900">support@yoghurtofyouth.co.uk</a>.</p>
               <p>We alternate between <strong>PRCXN</strong> and <strong>SPCTRL</strong> yoghurt variants every week.</p>
-              <p>Tap a plan below to subscribe.</p>
+              <p><strong>Tap a plan</strong> below to subscribe.</p>
             </div>
             <div className="mt-4">
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-px text-sm text-white">
