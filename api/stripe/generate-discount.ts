@@ -34,8 +34,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         promo = await stripe.promotionCodes.create({
           coupon: couponId,
           code,
-          max_redemptions: 1, // single use — Stripe enforces this at checkout
-        });
+          max_redemptions: 1,
+        } as any);
         break; // success
       } catch (e: any) {
         // If the code already exists, Stripe errors — retry with a new code
