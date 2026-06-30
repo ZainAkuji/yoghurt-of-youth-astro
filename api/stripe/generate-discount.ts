@@ -32,7 +32,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const code = generateCodeString();
       try {
         promo = await stripe.promotionCodes.create({
-          coupon: couponId,
+          promotion: {
+            type: "coupon",
+            coupon: couponId,
+          },
           code,
           max_redemptions: 1,
         } as any);
