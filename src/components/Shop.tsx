@@ -87,12 +87,13 @@ function getISOWeek(date: Date) {
   return Math.ceil(((+d - +yearStart + 1) / 86400000) / 7);
 }
 function getBrandRotation() {
+  const ROTATION = ["PRCXN", "SPCTRL", "LVLV"];
   const week = getISOWeek(new Date());
-  const isSPCTRLWeek = week % 2 === 0;
+  const idx = week % 3;
   return {
-    isSPCTRLWeek,
-    thisWeekBrand: isSPCTRLWeek ? "SPCTRL" : "PRCXN",
-    nextWeekBrand: isSPCTRLWeek ? "PRCXN" : "SPCTRL",
+    thisWeekBrand: ROTATION[idx],
+    nextWeekBrand: ROTATION[(idx + 1) % 3],
+    weekAfterBrand: ROTATION[(idx + 2) % 3],
   };
 }
 
@@ -244,7 +245,7 @@ export default function Shop() {
     setReserveOpen(true);
   }
 
-  const { thisWeekBrand, nextWeekBrand } = getBrandRotation();
+  const { thisWeekBrand, nextWeekBrand, weekAfterBrand } = getBrandRotation();
   const ids = { PLN: "PLN", BFC: "BFC", STR: "STR", MNG: "MNG" };
   const qty = (id: string) => cart[id] || 0;
   const totalPlain = qty(ids.PLN);
@@ -288,7 +289,7 @@ export default function Shop() {
           <h2 className="text-2xl sm:text-3xl font-bold mb-4 ml-4">Flavour Selection · <span className="text-amber-300">{thisWeekBrand}</span></h2>
 
           <div className="bg-black/40 rounded-2xl border border-white/10 p-3 sm:p-4 backdrop-blur-sm text-sm sm:text-base text-white max-w-5xl space-y-1">
-            <p>This week is <strong>{thisWeekBrand}</strong> week, and next week is <strong>{nextWeekBrand}</strong> week.</p>
+            <p>This week is <strong>{thisWeekBrand}</strong> week, next week is <strong>{nextWeekBrand}</strong> week, then <strong>{weekAfterBrand}</strong> week.</p>
             <p>UK-wide next-day delivery available for <strong>£4.95</strong>.</p>
             <p>We dispatch on <strong>Mondays</strong> and <strong>Thursdays</strong> only.</p>
             <p>We ferment the yoghurt the day before dispatch and pack the order in <strong>insulated</strong> and <strong>❄️chilled packaging❄️</strong>, so it reaches you cold and fresh.</p>
@@ -448,7 +449,7 @@ export default function Shop() {
               <p>Receive <strong>7 bottles of yoghurt every week</strong> at a <strong>10% discount</strong>, fermented the day before dispatch for freshness.</p>
               <p>Your first batch will be dispatched on the coming <strong>available Monday</strong>. Book by <strong>Saturday evening</strong> for the <strong>coming Monday</strong>.</p>
               <p>You will be charged <strong>every week</strong> on the day of dispatch. Pause or cancel anytime by emailing <a href="mailto:support@yoghurtofyouth.co.uk" className="underline hover:text-slate-900">support@yoghurtofyouth.co.uk</a>.</p>
-              <p>We alternate between <strong>PRCXN</strong> and <strong>SPCTRL</strong> yoghurt variants every week.</p>
+              <p>We rotate through <strong>PRCXN</strong>, <strong>SPCTRL</strong>, and <strong>LVLV</strong> yoghurt variants on a three-week cycle.</p>
               <p><strong>Tap a plan</strong> below to subscribe.</p>
             </div>
             <div className="mt-4">

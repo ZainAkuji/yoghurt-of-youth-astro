@@ -80,6 +80,12 @@ export default function Header({ brand }: { brand: string }) {
                         A Theory of Gut Dysbiosis
                       </a>
                       <a
+                        href="/lvlv"
+                        className="block px-4 py-2 text-sm text-center text-white hover:bg-white/10 hover:text-amber-300 transition-colors"
+                      >
+                        LVLV and the Gut-Brain Axis
+                      </a>
+                      <a
                         href="/compare"
                         className="block px-4 py-2 text-sm text-center text-white hover:bg-white/10 hover:text-amber-300 transition-colors"
                       >
