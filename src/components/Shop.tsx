@@ -327,6 +327,7 @@ export default function Shop() {
               <p><strong>Taster</strong> consists of 1 of each flavour.</p>
               <p>Each flavour option consists of <strong>7 bottles</strong>.</p>
               <p><strong>Mixed</strong> consists of <strong>2 BFC</strong>, <strong>3 STR</strong>, and <strong>2 MNG</strong>.</p>
+              <p>Each bottle is <strong>250ml</strong>.</p>
               <p>Click on a flavour header to view the nutrition information.</p>
               <p>Click on the <strong>basket icon</strong> on the top right to complete your purchase.</p>
             </div>
