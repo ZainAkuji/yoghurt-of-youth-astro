@@ -744,7 +744,7 @@ function PayModal({ onClose, cart, payKind = "oneoff", subscriptionPlan }: { onC
 
   // ----- ONE-OFF CHECKOUT MODE -----
   return (
-    <Modal onClose={onClose} title="Checkout & Delivery">
+    <Modal onClose={onClose} title="Checkout">
       <p className="text-sm text-white/80">Fill in below, then continue to payment, where you will also enter your contact and delivery details. We deliver UK-wide, dispatch every <span className="font-semibold">Monday</span> & <span className="font-semibold">Thursday</span>, and use DPD Next Day delivery.</p>
       <div className="mt-3 pl-3 text-sm text-white/80">
         Dispatch date: <span className="font-semibold text-white">{formatDateUK(date)} {weekdayFromISO(date)}</span>
@@ -756,11 +756,11 @@ function PayModal({ onClose, cart, payKind = "oneoff", subscriptionPlan }: { onC
         value={note}
         onChange={(e) => setNote(e.target.value)}
         placeholder="Order note (optional)"
-        className="mt-4 w-full rounded-xl border border-white/30 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-white/40"
+        className="mt-4 w-full rounded-xl border border-white/30 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/60 outline-none focus:ring-2 focus:ring-white/40"
       />
       <div className="mt-4 md:col-span-2">
         <div className="flex gap-2">
-          <input value={giftCode} onChange={(e) => setGiftCode(e.target.value)} placeholder="Enter gift code" className="flex-1 rounded-xl border border-white/30 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-white/40" />
+          <input value={giftCode} onChange={(e) => setGiftCode(e.target.value)} placeholder="Free 🍓 promo code" className="flex-1 rounded-xl border border-white/30 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/60 outline-none focus:ring-2 focus:ring-white/40" />
           {discountPercent > 0 ? (
             <div className="px-3 py-2 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-sm font-semibold">Applied: 10% off</div>
           ) : giftStrQty > 0 ? (
@@ -770,6 +770,9 @@ function PayModal({ onClose, cart, payKind = "oneoff", subscriptionPlan }: { onC
           )}
         </div>
       </div>
+      <p className="mt-3 pl-3 text-xs text-white/80">
+        Have a one-time discount code? You can apply it at the secure checkout on the next step.
+      </p>
       {qtyTotal > 0 && (
         <div className="mt-4 rounded-2xl bg-black/40 border border-white/15 p-4 text-sm text-white/85">
           <div className="font-semibold mb-2">Summary</div>

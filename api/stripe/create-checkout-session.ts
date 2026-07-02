@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Stripe from "stripe";
-import { Redis } from "@upstash/redis";  // ← correct import
+
+// Persistent Stripe Product for the yoghurt (coupons' applies_to targets this)
+const YOGHURT_PRODUCT_ID = "prod_Uo4XG1pLRRdGwC";
 
 // If your totals are in GBP pounds (e.g. 12.50), convert to pence (1250)
 function poundsToPence(amount: number) {
@@ -39,30 +41,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "Missing required checkout data." });
     }
 
-    // ---- Gift code: validate and enforce 10% discount server-side ----
+    // ---- Gift code (client-side codes only: YOY25 free bottle). ----
+    // NOTE: percentage discounts (MINUS10, first-order codes) are now handled
+    // natively by Stripe promotion codes at checkout, NOT here.
     const giftCode = String(gift_code || "").trim().toUpperCase();
-    const clientDiscountPercent = Number(discount_percent || 0);
-    const clientGiftStrQty = Number(gift_str_qty || 0);
-
-    // Server decides the benefit — never trust the client values
-    const validDiscountPercent = giftCode === "MINUS10" ? 10 : 0;
     const validGiftStrQty = giftCode === "YOY25" ? 1 : 0;
-    const giftApplies = validDiscountPercent > 0 || validGiftStrQty > 0;
 
-    if ((clientDiscountPercent > 0 || clientGiftStrQty > 0) && !giftApplies) {
-      return res.status(400).json({ error: "Invalid gift code." });
-    }
-
-    // Recalculate server-side to prevent tampering
+    // Amounts. merchTotal already includes 7-for-6 bundle pricing (pre-code-discount).
     const merchTotal = Number(totals.merchTotal || 0);
     const deliveryFee = Number(totals.deliveryFee || 0);
-    const discountAmount = validDiscountPercent > 0
-      ? Math.round(merchTotal * validDiscountPercent) / 100
-      : 0;
-    const totalPounds = Math.max(0, merchTotal - discountAmount + deliveryFee);
-    const amountPence = poundsToPence(totalPounds);
+    const merchPence = poundsToPence(merchTotal);
+    const deliveryPence = poundsToPence(deliveryFee);
 
-    if (amountPence < 50) {
+    if (merchPence < 50) {
       return res.status(400).json({ error: "Total too small." });
     }
 
@@ -76,7 +67,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ✅ Keep metadata small (Stripe metadata values are short strings)
     const metadata: Stripe.MetadataParam = {
-      // for EmailJS template
       brand: "Yoghurt of Youth",
 
       customer_name: customer.name || "",
@@ -91,8 +81,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       delivery_method: "delivery",
       delivery_label: "Delivery",
 
-      // order summary fields used by your EmailJS template
-      order_lines: JSON.stringify(orderLines).slice(0, 480), // safety cap
+      order_lines: JSON.stringify(orderLines).slice(0, 480),
       bottles: String(totals.qtyTotal ?? ""),
       plain_qty: String(totals.plainQty ?? ""),
       flav_qty: String(totals.flavQty ?? ""),
@@ -102,19 +91,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       flav_remainder: String(totals.flavRemainder ?? ""),
       merchandise_total: String(totals.merchTotal ?? ""),
       delivery_fee: String(totals.deliveryFee ?? ""),
+      // NOTE: pre-discount total. Actual paid amount is read from the
+      // completed session in the webhook (session.amount_total).
       total_paid: String(totals.total ?? ""),
 
-      // gift / discount fields
       gift_code: giftCode,
-      discount_percent: String(validDiscountPercent || 0),
-      discount_amount: String(discountAmount.toFixed(2)),
       gift_str_qty: String(validGiftStrQty || 0),
 
-      // internal id you like
       order_id: orderId,
       payment_provider: "stripe",
-
-      // if you pass this from client, include it; otherwise blank
       yoghurt_strain: String(totals.deliveryBrand || ""),
     };
 
@@ -128,12 +113,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       billing_address_collection: "required",
       phone_number_collection: { enabled: true },
       shipping_address_collection: { allowed_countries: ["GB"] },
+      allow_promotion_codes: true,
       line_items: [
         {
+          // Yoghurt line — tied to the Product so coupons' applies_to targets it.
           price_data: {
             currency: "gbp",
-            product_data: { name: "Yoghurt of Youth order" },
-            unit_amount: amountPence,
+            product: YOGHURT_PRODUCT_ID,
+            unit_amount: merchPence,
+          },
+          quantity: 1,
+        },
+        {
+          // Delivery line — separate, NOT tied to the yoghurt product, so
+          // promo codes (restricted to yoghurt) never discount it.
+          price_data: {
+            currency: "gbp",
+            product_data: { name: "Chilled Next-Day Delivery" },
+            unit_amount: deliveryPence,
           },
           quantity: 1,
         },

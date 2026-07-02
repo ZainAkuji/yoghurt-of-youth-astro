@@ -135,7 +135,7 @@ function buildOneOffCustomerHtml(p: {
   orderId: string;
   deliveryDate: string;
   bottles: string;
-  paymentMethod: string;
+  discountText: string;
   totalPaid: string;
   orderLines: string;
   note: string;
@@ -180,7 +180,7 @@ function buildOneOffCustomerHtml(p: {
           ${windowRow}
           ${addressRow}
           <tr><td style="padding:6px 0;color:#555;"><strong>Total bottles:</strong></td><td style="padding:6px 0;">${p.bottles}</td></tr>
-          <tr><td style="padding:6px 0;color:#555;"><strong>Payment method:</strong></td><td style="padding:6px 0;">${p.paymentMethod}</td></tr>
+          ${p.discountText ? `<tr><td style="padding:6px 0;color:#555;"><strong>Discount applied:</strong></td><td style="padding:6px 0;color:#16a34a;">−${p.discountText}</td></tr>` : ""}
           <tr><td style="padding:10px 0;border-top:1px solid #e2e8f0;"><strong>Total paid:</strong></td><td style="padding:10px 0;border-top:1px solid #e2e8f0;"><strong>${p.totalPaid}</strong></td></tr>
         </tbody>
       </table>
@@ -209,7 +209,7 @@ function buildOneOffOwnerHtml(p: {
   customerName: string; customerEmail: string; customerPhone: string;
   customerAddress: string; orderId: string;
   deliveryDate: string; bottles: string; merchandiseTotal: string;
-  deliveryFee: string; paymentMethod: string; totalPaid: string;
+  deliveryFee: string; discountText: string; totalPaid: string;
   orderLines: string; note: string;
 }) {
   const sectionTitle = "Delivery";
@@ -250,8 +250,8 @@ function buildOneOffOwnerHtml(p: {
       <table role="presentation" style="border-collapse:collapse;width:100%;"><tbody>
         <tr><td style="padding:6px 0;width:45%;color:#555;"><strong>Total bottles:</strong></td><td style="padding:6px 0;">${p.bottles}</td></tr>
         <tr><td style="padding:6px 0;color:#555;"><strong>Merchandise total:</strong></td><td style="padding:6px 0;">${p.merchandiseTotal}</td></tr>
+        ${p.discountText ? `<tr><td style="padding:6px 0;color:#555;"><strong>Discount applied:</strong></td><td style="padding:6px 0;color:#16a34a;">−${p.discountText}</td></tr>` : ""}
         ${deliveryFeeRow}
-        <tr><td style="padding:6px 0;color:#555;"><strong>Payment method:</strong></td><td style="padding:6px 0;">${p.paymentMethod}</td></tr>
         <tr><td style="padding:10px 0;border-top:1px solid #e2e8f0;"><strong>Total paid:</strong></td><td style="padding:10px 0;border-top:1px solid #e2e8f0;"><strong>${p.totalPaid}</strong></td></tr>
       </tbody></table>
       ${noteHtml}
@@ -523,18 +523,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Gift code marking (after payment success)
       const giftCode = String(m.gift_code || "").trim().toUpperCase();
-      const discountPercent = Number(m.discount_percent || 0);
       const giftStrQty = Number(m.gift_str_qty || 0);
       const emailKey = customerEmail.trim().toLowerCase();
+
+      // Read the ACTUAL amount paid from the completed session (reflects any
+      // Stripe promotion code the customer applied at checkout). Fall back to
+      // the pre-discount metadata only if the session figure is missing.
+      const actualPaidPounds =
+        typeof session.amount_total === "number"
+          ? session.amount_total / 100
+          : Number(m.total_paid || 0);
+
+      // How much a promo code took off (0 if none used).
+      const discountPounds =
+        typeof session.total_details?.amount_discount === "number"
+          ? session.total_details.amount_discount / 100
+          : 0;
 
       await sendMetaPurchaseCAPI({
         orderId: m.order_id || session.id || "",
         email: customerEmail,
         phone: customerPhone,
-        value: Number(m.total_paid || 0),
+        value: actualPaidPounds,
       });
 
-      if ((discountPercent > 0 || giftStrQty > 0) && giftCode && emailKey) {
+      // Record YOY25 free-bottle usage (client-side gift). Stripe promo codes
+      // enforce their own single-use, so we only track the YOY25 gift here.
+      if (giftStrQty > 0 && giftCode && emailKey) {
         const usedKey = `yoy_gift_used:${giftCode}:${emailKey}`;
         await redis.set(usedKey, {
           order_id: m.order_id || "",
@@ -553,8 +568,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         bottles: String(m.bottles || ""),
         merchandiseTotal: fmtGbp(m.merchandise_total),
         deliveryFee: fmtGbp(m.delivery_fee),
-        paymentMethod: "Stripe",
-        totalPaid: fmtGbp(m.total_paid),
+        discountText: discountPounds > 0 ? fmtGbp(discountPounds) : "",
+        totalPaid: fmtGbp(actualPaidPounds),
         orderLines: orderLinesPretty,
         note: String(m.note || ""),
       });
@@ -568,8 +583,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           orderId: m.order_id || "",
           deliveryDate: deliveryDatePretty,
           bottles: String(m.bottles || ""),
-          paymentMethod: "Stripe",
-          totalPaid: fmtGbp(m.total_paid),
+          discountText: discountPounds > 0 ? fmtGbp(discountPounds) : "",
+          totalPaid: fmtGbp(actualPaidPounds),
           orderLines: orderLinesPretty,
           note: String(m.note || ""),
         });
