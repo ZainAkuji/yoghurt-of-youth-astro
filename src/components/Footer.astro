@@ -11,22 +11,8 @@ const year = new Date().getFullYear();
   <div
     class="relative z-10 mx-auto max-w-6xl grid grid-cols-3 gap-3 sm:gap-4 md:gap-8 px-3 sm:px-4 md:px-6 items-center text-left text-[10px] sm:text-xs md:text-sm leading-tight w-full"
   >
-    <div class="flex justify-center md:justify-start min-w-0">
-      <img
-        src="/logo_inverted_transparent.png"
-        alt="Yoghurt of Youth Logo"
-        class="h-10 sm:h-12 md:h-16 w-auto object-contain"
-      />
-    </div>
 
-    <div class="min-w-0 text-center">
-      <p class="break-words">
-        © {year} Yoghurt of Youth.<br />
-        All rights reserved.
-      </p>
-    </div>
-
-    <div class="flex justify-center md:justify-end gap-4">
+    <div class="flex justify-center gap-4">
       <a href="https://www.instagram.com/yoghurtofyouth" target="_blank" rel="noreferrer">
         <img
           src="/instagram_icon.png"
@@ -34,6 +20,19 @@ const year = new Date().getFullYear();
           class="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 opacity-90 hover:opacity-100 transition"
         />
       </a>
+    </div>
+
+    <div class="min-w-0 text-center">
+      <a href="/contact" class="underline hover:text-amber-300 transition break-words">
+        Contact Us
+      </a>
+    </div>
+
+    <div class="min-w-0 text-center">
+      <p class="break-words">
+        © {year} Yoghurt of Youth.<br />
+        All rights reserved.
+      </p>
     </div>
   </div>
 </footer>
