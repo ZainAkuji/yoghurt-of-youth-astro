@@ -9,7 +9,7 @@ export default function Header({ brand }: { brand: string }) {
   const itemsCount = totalCount($cart);
 
   React.useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 100);
+    const onScroll = () => setScrolled(window.scrollY > 1);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -22,7 +22,7 @@ export default function Header({ brand }: { brand: string }) {
   }, [scienceOpen]);
 
   return (
-    <header className="sticky top-0 z-50 transition-all duration-500 ease-in-out group">
+    <header className="sticky top-[28px] z-50 transition-all duration-500 ease-in-out group">
       <div
         className={`relative transition-all duration-500 ${scrolled ? "h-20" : "h-32"} group-hover:h-32`}
         style={{

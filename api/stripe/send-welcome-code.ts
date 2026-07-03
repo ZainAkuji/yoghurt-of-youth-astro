@@ -55,7 +55,7 @@ function buildWelcomeHtml(code: string) {
       <p style="margin:0 0 14px;">To use it, add your yoghurt to the basket, head to the secure checkout, and enter this code in the <strong>promotion code</strong> box. Your 10% discount will apply to your yoghurt.</p>
       <p style="margin:0 0 14px;color:#555;font-size:14px;">Please note: this code is valid for <strong>one use only</strong>, on your first order.</p>
       <div style="text-align:center;margin:22px 0;">
-        <a href="https://yoghurtofyouth.co.uk/shop" style="display:inline-block;background:#fbbf24;color:#1a1a2e;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;">Shop now</a>
+        <a href="https://yoghurtofyouth.co.uk/shop" style="display:inline-block;background:#fbbf24;padding:12px 28px;border-radius:10px;text-decoration:none;"><span style="color:#1a1a2e !important;font-weight:700;font-family:Arial,sans-serif;font-size:16px;text-decoration:none;">Shop now</span></a>
       </div>
       <p style="margin:16px 0 0;"><strong>– The Yoghurt of Youth Team</strong></p>
     </div>

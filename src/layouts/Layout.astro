@@ -6,6 +6,7 @@ import Footer from "../components/Footer.astro";
 interface Props {
   title: string;
   description: string;
+  productSchema?: string;
 }
 
 const { title, description, productSchema } = Astro.props;
@@ -79,6 +80,80 @@ const websiteSchema = {
 	{productSchema && <script type="application/ld+json" set:html={JSON.stringify(productSchema)} />}
   </head>
   <body class="min-h-screen bg-gradient-to-b from-white to-slate-50 text-slate-800">
+    <!-- Announcement banner (sticky, above header) -->
+    <div class="yoy-banner">
+      <div class="yoy-banner-track">
+        <span class="yoy-banner-content">
+          <span>7 for the price of 6</span><span class="dot">·</span>
+          <span>Sign up for 10% off your first order</span><span class="dot">·</span>
+          <span>Subscribe &amp; save 10%</span><span class="dot">·</span>
+          <span>Chilled delivery £4.95</span><span class="dot">·</span>
+          <span><span class="stars">★★★★★</span> 5.0 on Google</span><span class="dot">·</span>
+        </span>
+        <span class="yoy-banner-content" aria-hidden="true">
+          <span>7 for the price of 6</span><span class="dot">·</span>
+          <span>Sign up for 10% off your first order</span><span class="dot">·</span>
+          <span>Subscribe &amp; save 10%</span><span class="dot">·</span>
+          <span>Chilled delivery £4.95</span><span class="dot">·</span>
+          <span><span class="stars">★★★★★</span> 5.0 on Google</span><span class="dot">·</span>
+        </span>
+        <span class="yoy-banner-content" aria-hidden="true">
+          <span>7 for the price of 6</span><span class="dot">·</span>
+          <span>Sign up for 10% off your first order</span><span class="dot">·</span>
+          <span>Subscribe &amp; save 10%</span><span class="dot">·</span>
+          <span>Chilled delivery £4.95</span><span class="dot">·</span>
+          <span><span class="stars">★★★★★</span> 5.0 on Google</span><span class="dot">·</span>
+        </span>
+        <span class="yoy-banner-content" aria-hidden="true">
+          <span>7 for the price of 6</span><span class="dot">·</span>
+          <span>Sign up for 10% off your first order</span><span class="dot">·</span>
+          <span>Subscribe &amp; save 10%</span><span class="dot">·</span>
+          <span>Chilled delivery £4.95</span><span class="dot">·</span>
+          <span><span class="stars">★★★★★</span> 5.0 on Google</span><span class="dot">·</span>
+        </span>
+      </div>
+    </div>
+
+    <style>
+      .yoy-banner {
+        position: sticky;
+        top: 0;
+        z-index: 60; /* above the header (z-50) */
+        height: 28px;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        background: #000;
+        color: #fff;
+        overflow: hidden;
+        white-space: nowrap;
+        font-size: 12px;
+        line-height: 1;
+      }
+      .yoy-banner-track {
+        display: inline-flex;
+        width: max-content;
+        animation: yoy-scroll 60s linear infinite;
+      }
+      .yoy-banner:hover .yoy-banner-track { animation-play-state: paused; }
+      .yoy-banner-content {
+        display: inline-flex;
+        align-items: center;
+        gap: 16px;
+        padding-right: 16px;
+      }
+      .yoy-banner .dot { opacity: 0.5; }
+      .yoy-banner .stars { color: #fcd34d; }
+      @keyframes yoy-scroll {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .yoy-banner-track { animation: none; }
+        .yoy-banner { overflow-x: auto; }
+      }
+    </style>
+
     <!-- Header is interactive (scroll-shrink), so it runs as a React island -->
     <Header client:load brand="Yoghurt of Youth" />
 
