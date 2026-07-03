@@ -504,6 +504,30 @@ export default function Shop() {
               (window as any).fbq("track", "InitiateCheckout", data, { eventID: eventId });
             }
             sendCAPIEvent("InitiateCheckout", { eventId, customData: data });
+
+            // Klaviyo "Started Checkout" — for the abandoned-cart flow.
+            // Only attaches to a profile if the visitor is cookied (e.g. signed
+            // up via the popup); anonymous visitors are silently ignored.
+            if (typeof window !== "undefined") {
+              const klaviyo = ((window as any).klaviyo = (window as any).klaviyo || []);
+              const itemNames = items.map((i: any) => `${i.name} × ${i.qty}`);
+              klaviyo.push([
+                "track",
+                "Started Checkout",
+                {
+                  value: total,
+                  ItemNames: itemNames,
+                  Items: items.map((i: any) => ({
+                    ProductName: i.name,
+                    Quantity: i.qty,
+                    ItemPrice: i.price,
+                    RowTotal: Number((i.qty * i.price).toFixed(2)),
+                  })),
+                  CheckoutURL: "https://yoghurtofyouth.co.uk/shop?cart=open",
+                },
+              ]);
+            }
+
             openCheckout();
           }}
         />
