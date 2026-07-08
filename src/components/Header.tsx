@@ -86,6 +86,12 @@ export default function Header({ brand }: { brand: string }) {
                         LVLV and the Gut-Brain Axis
                       </a>
                       <a
+                        href="/skin"
+                        className="block px-4 py-2 text-sm text-center text-white hover:bg-white/10 hover:text-amber-300 transition-colors"
+                      >
+                        The Gut-Skin Axis
+                      </a>
+                      <a
                         href="/compare"
                         className="block px-4 py-2 text-sm text-center text-white hover:bg-white/10 hover:text-amber-300 transition-colors"
                       >
