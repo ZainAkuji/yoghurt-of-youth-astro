@@ -306,7 +306,7 @@ export default function Shop() {
                   <strong>100+</strong> satisfied customers
                 </p>
                 <p className="mt-1 text-sm text-slate-600">
-                  1 trillion CFU
+                  100+ billion CFU
                   <span className="mx-2 text-slate-300">·</span>
                   Lactose-free
                   <span className="mx-2 text-slate-300">·</span>
@@ -475,7 +475,7 @@ export default function Shop() {
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Live L. reuteri probiotic yoghurt, made fresh</h2>
             <p className="mt-3 text-sm text-slate-700 leading-relaxed">
               Yoghurt of Youth is a lactose-free probiotic yoghurt fermented with researched <em>Lactobacillus reuteri</em> strains,
-              at around one trillion live cultures per 250ml bottle. We ferment each batch the day before dispatch and deliver it
+              at over 100 billion live cultures per 250ml bottle. We ferment each batch the day before dispatch and deliver it
               chilled across the UK, so it reaches you fresh, not dried into a capsule. No added sweeteners, ever.
             </p>
             <p className="mt-3 text-sm text-slate-700 leading-relaxed">
