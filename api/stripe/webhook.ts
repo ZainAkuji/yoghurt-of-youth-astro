@@ -141,7 +141,7 @@ function buildOneOffCustomerHtml(p: {
   note: string;
 }) {
   const introHtml = `<p style="margin:0 0 14px;">Thank you for your order with <strong>Yoghurt of Youth</strong>. Your payment has been successfully received. Your yoghurts will be fermented on the day before dispatch for freshness.</p>
-       <p style="margin:0 0 14px;">Your order will be sent via DPD Next Day delivery and should arrive the next day. The package is insulated and chilled to maintain the correct temperature for the products during transit.</p>
+       <p style="margin:0 0 14px;">Your order will be sent via Next Day delivery and should arrive the next day. The package is insulated and chilled to maintain the correct temperature for the products during transit.</p>
        <p style="margin:0 0 14px;">Please ensure someone is available to receive the parcel, or select a safe place if preferred.</p>`;
 
   const dateLabel = "Dispatch date";
@@ -280,10 +280,10 @@ function buildSubCustomerHtml(p: {
     </div>
     <div style="padding:20px;">
       <p style="margin:0 0 12px;">Dear ${p.customerName},</p>
-      <p style="margin:0 0 14px;">Thank you for subscribing to <strong>Yoghurt of Youth</strong>. Your <strong>Weekly Gut Punch</strong> subscription is now live. Your yoghurts are fermented on the day before dispatch for freshness.</p>
-      <p style="margin:0 0 14px;">Your order will be sent via DPD Next Day delivery and should arrive the next day. The package is insulated and chilled to maintain the correct temperature for the products during transit.</p>
+      <p style="margin:0 0 14px;">Thank you for subscribing to <strong>Yoghurt of Youth</strong>. Your weekly subscription is now live. Your yoghurts are fermented on the day before dispatch for freshness.</p>
+      <p style="margin:0 0 14px;">Your order will be sent via Next Day delivery and should arrive the next day. The package is insulated and chilled to maintain the correct temperature for the products during transit.</p>
       <p style="margin:0 0 14px;">Please ensure someone is available to receive the parcel, or select a safe place if preferred.</p>
-      <p style="margin:0 0 14px;">After the first dispatch day, your Weekly Gut Punch will be dispatched every following Monday.</p>
+      <p style="margin:0 0 14px;">After the first dispatch day, your subscription will be dispatched every following Monday.</p>
       <p style="margin:0 0 18px;">Below are the full details of your subscription.</p>
       <p style="margin:0 0 18px;">Please leave us a review on Google and follow us on Instagram. Links are down below.</p>
       <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px;margin-bottom:16px;">
@@ -334,7 +334,7 @@ function buildSubOwnerHtml(p: {
       </tr></tbody></table>
     </div>
     <div style="padding:20px;">
-      <p style="margin:0 0 14px;"><strong>New Weekly Gut Punch subscription created.</strong></p>
+      <p style="margin:0 0 14px;"><strong>New weekly subscription created.</strong></p>
       <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px;margin-bottom:16px;">
         <strong>Subscription reference:</strong><br><span style="font-size:14px;font-weight:700;letter-spacing:0.2px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;word-break:break-all;">${p.orderId}</span>
       </div>
@@ -409,7 +409,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const session = event.data.object as Stripe.Checkout.Session;
       const ownerEmail = process.env.OWNER_EMAIL || "zainul_a@hotmail.co.uk";
 
-      // SUBSCRIPTION (Weekly Gut Punch)
+      // SUBSCRIPTION
       if (session.mode === "subscription") {
         const subId = typeof session.subscription === "string" ? session.subscription : "";
         let sub: Stripe.Subscription | null = null;
@@ -468,7 +468,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           orderLines: linesArr.join("\n"),
           note: String(sm.note || ""),
         });
-        await sendResend(ownerEmail, "New Weekly Gut Punch subscription", subOwnerHtml);
+        await sendResend(ownerEmail, "New weekly subscription", subOwnerHtml);
 
         if (customer_email) {
           const subCustomerHtml = buildSubCustomerHtml({
@@ -481,7 +481,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             orderLines: linesArr.join("\n"),
             note: String(sm.note || ""),
           });
-          await sendResend(customer_email, "Your Weekly Gut Punch subscription is live", subCustomerHtml);
+          await sendResend(customer_email, "Your weekly subscription is live", subCustomerHtml);
         }
 
         return res.status(200).json({ received: true });

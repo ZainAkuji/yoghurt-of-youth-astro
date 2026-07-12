@@ -76,21 +76,6 @@ function buildConfirmOrderFromDraft(draft: any, orderId: string): ConfirmOrder |
   };
 }
 
-function ConfettiOverlay() {
-  const pieces = Array.from({ length: 80 });
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden z-40">
-      {pieces.map((_, i) => (
-        <span key={i} className="confetti-piece" style={{
-          left: Math.random() * 100 + "%",
-          animationDelay: Math.random() * 1.5 + "s",
-          backgroundColor: ["#fbbf24", "#34d399", "#60a5fa", "#f472b6", "#e5e7eb"][i % 5],
-        }} />
-      ))}
-    </div>
-  );
-}
-
 export default function OrderConfirmation() {
   const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
   const [order, setOrder] = useState<ConfirmOrder | null>(null);
@@ -157,15 +142,8 @@ export default function OrderConfirmation() {
   // ---------- LOADING ----------
   if (status === "loading") {
     return (
-      <section
-        className="min-h-[60vh] flex items-center justify-center px-4 text-white"
-        style={{
-          backgroundImage: "linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url('/flavour_bg.webp')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <p className="text-white/80">Confirming your order…</p>
+      <section className="min-h-[60vh] flex items-center justify-center px-4 bg-white text-slate-900">
+        <p className="text-slate-500">Confirming your order…</p>
       </section>
     );
   }
@@ -173,21 +151,14 @@ export default function OrderConfirmation() {
   // ---------- ERROR / NOT VERIFIED ----------
   if (status === "error" || !order) {
     return (
-      <section
-        className="min-h-[60vh] flex items-center justify-center px-4 text-white"
-        style={{
-          backgroundImage: "linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url('/flavour_bg.webp')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
+      <section className="min-h-[60vh] flex items-center justify-center px-4 bg-white text-slate-900">
         <div className="max-w-md text-center">
-          <h1 className="text-2xl font-bold">We couldn't confirm your order</h1>
-          <p className="mt-3 text-white/75 text-sm leading-relaxed">
+          <h1 className="text-2xl font-bold text-slate-900">We couldn't confirm your order</h1>
+          <p className="mt-3 text-slate-600 text-sm leading-relaxed">
             If you completed payment, your order is still safe and you'll receive a confirmation email shortly.
-            If you have any questions, email <a href="mailto:support@yoghurtofyouth.co.uk" className="underline">support@yoghurtofyouth.co.uk</a>.
+            If you have any questions, email <a href="mailto:support@yoghurtofyouth.co.uk" className="underline hover:text-amber-500 transition">support@yoghurtofyouth.co.uk</a>.
           </p>
-          <a href="/" className="inline-block mt-6 rounded-2xl bg-white text-black px-6 py-2.5 text-sm font-semibold hover:bg-amber-300 transition">Return to homepage</a>
+          <a href="/" className="inline-block mt-6 rounded-2xl bg-slate-900 text-white px-6 py-2.5 text-sm font-semibold hover:bg-slate-700 transition">Return to homepage</a>
         </div>
       </section>
     );
@@ -198,69 +169,60 @@ export default function OrderConfirmation() {
 
   // ---------- SUCCESS ----------
   return (
-    <section
-      className="relative min-h-[70vh] py-16 px-4 flex items-center justify-center text-white overflow-hidden"
-      style={{
-        backgroundImage: "linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url('/flavour_bg.webp')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
-      <ConfettiOverlay />
-
+    <section className="relative min-h-[70vh] py-16 px-4 flex items-center justify-center bg-white text-slate-900 overflow-hidden">
       <div className="relative z-10 w-full max-w-md text-center">
-        <h1 className="text-3xl font-bold">{isSub ? "Subscription confirmed" : "Order confirmed"}</h1>
-        <p className="mt-2 text-white/80">
+        <h1 className="text-3xl font-bold text-slate-900">{isSub ? "Subscription confirmed" : "Order confirmed"}</h1>
+        <p className="mt-2 text-slate-600">
           {isSub
-            ? <>Thank you, {order.name}. Your <span className="font-semibold">Weekly Gut Punch</span> subscription is live.</>
+            ? <>Thank you, {order.name}. Your weekly subscription is live.</>
             : <>Thank you for your order, {order.name}.</>}
         </p>
 
         <div className="mt-8">
-          <div className="text-white/50 text-xs uppercase tracking-wider">{isSub ? "Subscription reference" : "Order reference"}</div>
-          <div className="mt-1 font-mono font-semibold text-lg tracking-wide break-all">{order.orderId || "—"}</div>
+          <div className="text-slate-400 text-xs uppercase tracking-wider">{isSub ? "Subscription reference" : "Order reference"}</div>
+          <div className="mt-1 font-mono font-semibold text-lg tracking-wide break-all text-slate-900">{order.orderId || "—"}</div>
         </div>
 
         <div className="mt-6 space-y-4">
           <div>
-            <div className="text-white/50 text-xs uppercase tracking-wider">{isSub ? "First dispatch" : "Dispatch date"}</div>
-            <div className="mt-0.5 font-medium">{order.formattedDate}</div>
+            <div className="text-slate-400 text-xs uppercase tracking-wider">{isSub ? "First dispatch" : "Dispatch date"}</div>
+            <div className="mt-0.5 font-medium text-slate-800">{order.formattedDate}</div>
           </div>
 
           <div>
-            <div className="text-white/50 text-xs uppercase tracking-wider">{isSub ? "Weekly price" : "Total paid"}</div>
-            <div className="mt-0.5 font-semibold text-emerald-400">{order.totalText}</div>
+            <div className="text-slate-400 text-xs uppercase tracking-wider">{isSub ? "Weekly price" : "Total paid"}</div>
+            <div className="mt-0.5 font-semibold text-emerald-600">{order.totalText}</div>
           </div>
 
           <div>
-            <div className="text-white/50 text-xs uppercase tracking-wider">Delivery address</div>
-            <div className="mt-0.5 leading-relaxed">{order.address}</div>
+            <div className="text-slate-400 text-xs uppercase tracking-wider">Delivery address</div>
+            <div className="mt-0.5 leading-relaxed text-slate-800">{order.address}</div>
           </div>
 
           <div>
-            <div className="text-white/50 text-xs uppercase tracking-wider">{isSub ? "What you'll receive each week" : "Order summary"}</div>
-            <div className="mt-1 space-y-0.5 text-white/90">
+            <div className="text-slate-400 text-xs uppercase tracking-wider">{isSub ? "What you'll receive each week" : "Order summary"}</div>
+            <div className="mt-1 space-y-0.5 text-slate-800">
               {order.lines.map((line, i) => (<div key={i}>{line}</div>))}
             </div>
           </div>
         </div>
 
         {isSub && (
-          <p className="mt-6 text-white/60 text-xs leading-relaxed">
-            We alternate PRCXN and SPCTRL by week. Your yoghurt is fermented on the day before dispatch for freshness. Delivery is £4.95 for Weekly Gut Punch.
+          <p className="mt-6 text-slate-500 text-xs leading-relaxed">
+            We rotate through PRCXN, SPCTRL, and LVLV by week. Your yoghurt is fermented the day before dispatch for freshness. Chilled next-day delivery is £4.95.
           </p>
         )}
 
-        <p className="mt-6 text-xs text-white/60 leading-relaxed">
-          Your yoghurt is fermented on the day before dispatch for freshness. You'll receive an email receipt with full order details shortly. If it doesn't arrive within 5 minutes, please check spam. Questions? Email support@yoghurtofyouth.co.uk.
+        <p className="mt-6 text-xs text-slate-500 leading-relaxed">
+          Your yoghurt is fermented the day before dispatch for freshness. You'll receive an email receipt with full order details shortly. If it doesn't arrive within 5 minutes, please check spam. Questions? Email support@yoghurtofyouth.co.uk.
         </p>
         {isSub && (
-          <p className="mt-3 text-xs text-white/60 leading-relaxed">
+          <p className="mt-3 text-xs text-slate-500 leading-relaxed">
             To cancel, email support@yoghurtofyouth.co.uk with your name and address and we'll cancel your subscription shortly.
           </p>
         )}
 
-        <a href="/" className="inline-block mt-8 rounded-2xl bg-white text-black px-6 py-2.5 text-sm font-semibold hover:bg-amber-300 transition">
+        <a href="/" className="inline-block mt-8 rounded-2xl bg-slate-900 text-white px-6 py-2.5 text-sm font-semibold hover:bg-slate-700 transition">
           Continue shopping
         </a>
       </div>

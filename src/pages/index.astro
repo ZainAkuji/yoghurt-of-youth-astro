@@ -5,129 +5,208 @@ import Layout from "../layouts/Layout.astro";
 <Layout
   title="L. reuteri Probiotic Yoghurt UK | Yoghurt of Youth"
   description="Buy live L. reuteri probiotic yoghurt in the UK. Fresh-fermented and lactose-free with one trillion CFU per bottle, plus chilled next-day delivery."
+  transparentHero={true}
 >
-  <!-- ===== HERO ===== -->
-  <section
-    id="hero"
-    class="relative w-full overflow-hidden bg-black"
-    style="aspect-ratio: 16 / 9;"
-  >
-    <img
-      class="absolute inset-0 w-full h-full object-cover"
-      src="/hero_bg.webp"
-      alt=""
-    />
+  <!-- ===== FIXED HERO (sits behind, revealed at top, covered on scroll) ===== -->
+  <div class="hero-fixed">
+    <div class="hero-inner">
+      <img class="hero-img" src="/hero_bg.webp" alt="" />
+      <div class="hero-overlay"></div>
 
-    <div class="absolute inset-0 bg-black/25"></div>
+      <!-- Slogan -->
+      <div class="absolute top-[170px] left-4 sm:left-8 z-20">
+        <p class="text-white font-mono font-bold text-xl sm:text-3xl md:text-6xl leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">
+          By L reuteri.
+        </p>
+      </div>
 
-    <!-- Slogan (kept as a visual element, NOT the page h1) -->
-    <div class="absolute top-3 left-4 sm:top-6 sm:left-8 z-20">
-      <p class="text-white font-mono font-bold text-xl sm:text-3xl md:text-6xl leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">
-        By L reuteri.
-      </p>
+      <!-- Logo -->
+      <div class="relative z-10 flex items-center justify-center h-full">
+        <img
+          src="/logo_white_transparent.png"
+          alt="Yoghurt of Youth logo"
+          class="w-auto h-24 sm:h-36 md:h-56 lg:h-72 max-w-[88%] object-contain"
+        />
+      </div>
     </div>
+  </div>
 
-    <div class="relative z-10 flex items-center justify-center h-full">
-      <img
-        src="/logo_inverted_transparent.png"
-        alt="Yoghurt of Youth logo"
-        class="w-auto h-24 sm:h-36 md:h-56 lg:h-72 max-w-[88%] object-contain"
-      />
-    </div>
-  </section>
+  <!-- Spacer that reserves the hero's on-screen height, so the white panel starts at the hero's bottom edge -->
+  <div class="hero-spacer" aria-hidden="true"></div>
 
-  <!-- ===== PRODUCT LINES (PRCXN / SPCTRL) ===== -->
-  <section id="products" class="scroll-mt-32 md:scroll-mt-24 w-full">
-    <div class="mx-auto grid grid-cols-1 md:grid-cols-3 gap-0 w-full">
-      <!-- PRCXN -->
-      <article class="relative aspect-[3/2] w-full overflow-hidden">
-        <img src="/prcxn.webp" alt="PRCXN — targeted L. reuteri DSM 17648 yoghurt" class="absolute inset-0 w-full h-full object-cover" />
-        <div class="absolute inset-0 bg-black/40"></div>
-        <div class="relative z-10 h-full flex flex-col justify-between p-6">
-          <div>
-            <p class="text-sm uppercase tracking-[0.2em] text-white mb-1">Targeted</p>
-            <img src="/prcxn_logo.png" alt="PRCXN" class="w-[60%] object-contain drop-shadow-lg" />
-            <p class="mt-2 text-sm text-white max-w-md leading-relaxed">
-              Yoghurt fermented by <em>L. reuteri</em> DSM 17648.<br />
-              Studied for anti-<em>H. pylori</em> properties.<br />
-              The first stage of gut restoration.<br />
-              1 trillion CFU · No added sweeteners · Lactose-free · 250ml<br />
-            </p>
+  <!-- ===== WHITE PANEL (scrolls up over the hero, rounded top corners) ===== -->
+  <div class="white-panel">
+    <!-- Product cards -->
+    <section id="products" class="scroll-mt-32 md:scroll-mt-24 px-12 pt-12">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- PRCXN -->
+        <article class="yoy-card">
+          <img class="yoy-card-bg" src="/prcxn.webp" alt="PRCXN — targeted L. reuteri DSM 17648 yoghurt" />
+          <div class="yoy-card-overlay"></div>
+          <div class="yoy-card-content">
+            <div>
+              <p class="text-xs uppercase tracking-[0.2em] text-white mb-2">Targeted</p>
+              <img src="/prcxn_logo.png" alt="PRCXN" class="yoy-card-logo" />
+              <p class="yoy-card-text">
+                By <em>L. reuteri</em> DSM 17648.<br />
+                Studied for anti-<em>H. pylori</em> properties.<br />
+                Stage 1.
+              </p>
+            </div>
           </div>
-        </div>
-      </article>
+        </article>
 
-      <!-- SPCTRL -->
-      <article class="relative aspect-[3/2] w-full overflow-hidden">
-        <img src="/spctrl.webp" alt="SPCTRL — broad-acting L. reuteri DSM 17938 yoghurt" class="absolute inset-0 w-full h-full object-cover" />
-        <div class="absolute inset-0 bg-black/40"></div>
-        <div class="relative z-10 h-full flex flex-col justify-between p-6">
-          <div>
-            <p class="text-sm uppercase tracking-[0.2em] text-white mb-1">Broad-acting</p>
-            <img src="/spctrl_logo.png" alt="SPCTRL" class="w-[60%] object-contain drop-shadow-lg" />
-            <p class="mt-2 text-sm text-white max-w-md leading-relaxed">
-              Yoghurt fermented by <em>L. reuteri</em> DSM 17938.<br />
-              Studied for antipathogenic and anti-<em>Candida</em> properties.<br />
-              The second stage of gut restoration.<br />
-              1 trillion CFU · No added sweeteners · Lactose-free · 250ml<br />
-            </p>
+        <!-- SPCTRL -->
+        <article class="yoy-card">
+          <img class="yoy-card-bg" src="/spctrl.webp" alt="SPCTRL — broad-acting L. reuteri DSM 17938 yoghurt" />
+          <div class="yoy-card-overlay"></div>
+          <div class="yoy-card-content">
+            <div>
+              <p class="text-xs uppercase tracking-[0.2em] text-white mb-2">Broad-acting</p>
+              <img src="/spctrl_logo.png" alt="SPCTRL" class="yoy-card-logo" />
+              <p class="yoy-card-text">
+                By <em>L. reuteri</em> DSM 17938.<br />
+                Studied for antipathogenic and anti-<em>Candida</em> properties.<br />
+                Stage 2.
+              </p>
+            </div>
           </div>
-        </div>
-      </article>
+        </article>
 
-      <!-- LVLV -->
-      <article class="relative aspect-[3/2] w-full overflow-hidden">
-        <img src="/lvlv.webp" alt="LVLV — L. reuteri ATCC PTA 6475 yoghurt" class="absolute inset-0 w-full h-full object-cover" />
-        <div class="absolute inset-0 bg-black/40"></div>
-        <div class="relative z-10 h-full flex flex-col justify-between p-6">
-          <div>
-            <p class="text-sm uppercase tracking-[0.2em] text-white mb-1">Finishing</p>
-            <img src="/lvlv_logo.png" alt="LVLV" class="w-[60%] object-contain drop-shadow-lg" />
-            <p class="mt-2 text-sm text-white max-w-md leading-relaxed">
-              Yoghurt fermented by <em>L. reuteri</em> ATCC PTA 6475.<br />
-              Studied for antipathogenic and oxytocin-stimulating properties.<br />
-              The finishing stage of gut restoration.<br />
-              1 trillion CFU · No added sweeteners · Lactose-free · 250ml<br />
-            </p>
+        <!-- LVLV -->
+        <article class="yoy-card">
+          <img class="yoy-card-bg" src="/lvlv.webp" alt="LVLV — L. reuteri ATCC PTA 6475 yoghurt" />
+          <div class="yoy-card-overlay"></div>
+          <div class="yoy-card-content">
+            <div>
+              <p class="text-xs uppercase tracking-[0.2em] text-white mb-2">Finishing</p>
+              <img src="/lvlv_logo.png" alt="LVLV" class="yoy-card-logo" />
+              <p class="yoy-card-text">
+                By <em>L. reuteri</em> ATCC PTA 6475.<br />
+                Studied for antipathogenic and oxytocin-stimulating properties.<br />
+                Stage 3.
+              </p>
+            </div>
           </div>
-        </div>
-      </article>
-    </div>
+        </article>
+      </div>
+    </section>
 
-  <!-- ===== SEO INTRO ===== -->
-  <section
-    id="intro"
-    class="relative scroll-mt-32 md:scroll-mt-24 text-white py-12"
-    style="background-image: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url('/about_bg.webp'); background-size: cover; background-position: 50% center; background-repeat: no-repeat;"
-  >
-    <div class="max-w-3xl px-8 mx-auto">
-      <h1 class="text-2xl md:text-3xl font-bold text-white">
+    <!-- SEO intro + CTAs -->
+    <section id="intro" class="scroll-mt-32 md:scroll-mt-24 mx-auto max-w-3xl px-8 py-14">
+      <h1 class="text-2xl md:text-3xl font-bold text-slate-900">
         Live <em>L. reuteri</em> Probiotic Yoghurt for Gut Health
       </h1>
-
-      <p class="mt-4 text-white leading-relaxed">
-        Yoghurt of Youth is a lactose-free probiotic yoghurt
-        fermented by <em>Lactobacillus reuteri</em>, with over
-        <strong>one trillion CFU</strong> per 250&nbsp;ml bottle.
-		Delivered chilled across the UK, it is a
-        simple, natural, excellent way to support your gut health
-		on a daily basis.
+      <p class="mt-4 text-slate-700 leading-relaxed">
+        Yoghurt of Youth is a lactose-free probiotic yoghurt fermented by
+        <em>Lactobacillus reuteri</em>, with over <strong>one trillion CFU</strong>
+        per 250&nbsp;ml bottle. Delivered chilled across the UK, it is a simple,
+        natural, excellent way to support your gut health on a daily basis.
       </p>
-
-      <p class="mt-3 text-white leading-relaxed">
-        We craft three well-researched <em>L. reuteri</em> strains and rotate
-        them week by week. The strains work together to deliver amazing results.
-	      No added sweeteners. Completely lactose-free.
+      <p class="mt-3 text-slate-700 leading-relaxed">
+        We craft three well-researched <em>L. reuteri</em> strains and rotate them
+        week by week. The strains work together to deliver amazing results. No
+        added sweeteners. Completely lactose-free.
       </p>
-
-      <div class="mt-6 flex flex-wrap justify-center gap-3">
-        <a href="/about" class="rounded-2xl bg-white text-black px-6 py-2.5 text-sm font-semibold hover:bg-amber-300 transition">
+      <div class="mt-7 flex flex-wrap gap-3">
+        <a href="/about" class="rounded-2xl bg-slate-900 text-white px-6 py-2.5 text-sm font-semibold hover:bg-slate-700 transition">
           Learn More
         </a>
-        <a href="/shop" class="rounded-2xl bg-white text-black px-6 py-2.5 text-sm font-semibold hover:bg-amber-300 transition">
+        <a href="/shop" class="rounded-2xl bg-amber-400 text-slate-900 px-6 py-2.5 text-sm font-semibold hover:bg-amber-300 transition">
           Shop Now
         </a>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
+
+  <style>
+    /* Fixed hero: pinned behind the page */
+    .hero-fixed {
+      position: fixed;
+      top: 28px;
+      left: 0;
+      width: 100%;
+      z-index: 0;
+    }
+    .hero-inner {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 28px);   /* full screen minus the banner */
+      background: #000;
+      overflow: hidden;
+    }
+    .hero-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.25);
+    }
+    /* Spacer occupies the same height as the hero so the white panel begins at its bottom edge */
+    .hero-spacer {
+      width: 100%;
+      height: calc(100vh - 28px);
+    }
+    /* White panel scrolls up over the fixed hero */
+    .white-panel {
+      position: relative;
+      z-index: 1;
+      background: #ffffff;
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+      margin-top: -28px;              /* pull up so rounded corners overlap the hero edge */
+      box-shadow: 0 -12px 40px rgba(0,0,0,0.18);
+      min-height: 60vh;               /* ensures enough height to scroll over the hero */
+    }
+    /* Product cards — text overlaid on the image, individual rounded cards */
+    .yoy-card {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(15,23,42,0.10);
+      aspect-ratio: 3 / 2;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .yoy-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(15,23,42,0.18);
+    }
+    .yoy-card-bg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .yoy-card-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.3);
+    }
+    .yoy-card-content {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 20px;
+    }
+    .yoy-card-logo {
+      width: auto;
+      max-width: 65%;
+      max-height: 46px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+      margin-bottom: 12px;
+    }
+    .yoy-card-text {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #fff;
+    }
+    .yoy-card-text em { font-style: italic; }
+  </style>
 </Layout>

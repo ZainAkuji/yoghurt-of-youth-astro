@@ -1,0 +1,15 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Checkout from "../components/Checkout.tsx";
+---
+
+<Layout
+  title="Checkout | Yoghurt of Youth"
+  description="Complete your Yoghurt of Youth order."
+>
+  <section class="bg-white text-slate-900 min-h-[70vh] py-12">
+    <div class="mx-auto max-w-3xl px-6">
+      <Checkout client:load />
+    </div>
+  </section>
+</Layout>

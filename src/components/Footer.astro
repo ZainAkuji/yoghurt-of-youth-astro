@@ -3,10 +3,8 @@ const year = new Date().getFullYear();
 ---
 
 <footer
-  class="relative aspect-[5120/1078] bg-no-repeat bg-cover bg-center text-white flex items-center"
-  style="background-image: url('/footer_bg.webp');"
+  class="relative bg-black text-white flex items-center py-40"
 >
-  <div class="absolute inset-0 bg-black/50"></div>
 
   <div
     class="relative z-10 mx-auto max-w-6xl grid grid-cols-3 gap-3 sm:gap-4 md:gap-8 px-3 sm:px-4 md:px-6 items-center text-left text-[10px] sm:text-xs md:text-sm leading-tight w-full"
@@ -22,11 +20,10 @@ const year = new Date().getFullYear();
       </a>
     </div>
 
-    <div class="min-w-0 text-center">
+    <div class="min-w-0 text-center flex flex-col items-center gap-2">
       <a href="/contact" class="underline hover:text-amber-300 transition break-words">
         Contact Us
       </a>
-      <br />
       <a href="/privacy" class="underline hover:text-amber-300 transition break-words">
         Privacy Policy
       </a>

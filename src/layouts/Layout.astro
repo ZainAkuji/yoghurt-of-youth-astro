@@ -2,14 +2,16 @@
 import "../styles/global.css";
 import Header from "../components/Header.tsx";
 import Footer from "../components/Footer.astro";
+import CartDrawer from "../components/CartDrawer.tsx";
 
 interface Props {
   title: string;
   description: string;
   productSchema?: string;
+  transparentHero?: boolean;
 }
 
-const { title, description, productSchema } = Astro.props;
+const { title, description, productSchema, transparentHero } = Astro.props;
 
 const orgSchema = {
   "@context": "https://schema.org",
@@ -45,6 +47,10 @@ const websiteSchema = {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
     <!-- Per-page SEO -->
     <title>{title}</title>
@@ -155,7 +161,8 @@ const websiteSchema = {
     </style>
 
     <!-- Header is interactive (scroll-shrink), so it runs as a React island -->
-    <Header client:load brand="Yoghurt of Youth" />
+    <Header client:load brand="Yoghurt of Youth" transparentHero={transparentHero} />
+    <CartDrawer client:load />
 
     <!-- Each page's unique content drops in here -->
     <slot />
