@@ -77,21 +77,45 @@ function computeTotals(
   };
 }
 
-// ===================== WEEK ROTATION =====================
-function getISOWeek(date: Date) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((+d - +yearStart + 1) / 86400000) / 7);
+// ===================== WEEK ROTATION (date-anchored) =====================
+// Physical rotation anchor: Monday 13 July 2026 = LVLV.
+// Cycle order: PRCXN -> SPCTRL -> LVLV -> (repeat)
+const ROTATION = ["PRCXN", "SPCTRL", "LVLV"];
+
+// Strain for a given Monday date, anchored to 13 Jul 2026 = LVLV (index 2).
+function strainForMonday(monday: Date): string {
+  const anchor = new Date(2026, 6, 13); // 13 July 2026 (month 0-indexed: 6 = July)
+  anchor.setHours(0, 0, 0, 0);
+  const m = new Date(monday);
+  m.setHours(0, 0, 0, 0);
+  const weeks = Math.round((m.getTime() - anchor.getTime()) / (7 * 86400000));
+  const idx = (((2 + weeks) % 3) + 3) % 3; // anchor is index 2 (LVLV)
+  return ROTATION[idx];
 }
-function getBrandRotation() {
-  const ROTATION = ["PRCXN", "SPCTRL", "LVLV"];
-  const week = getISOWeek(new Date());
-  const idx = week % 3;
-  return {
-    thisWeekBrand: ROTATION[idx],
-  };
+
+// The Monday date whose batch an order maps to, per mode.
+function mondayForMode(mode: "oneoff" | "subscribe"): Date {
+  if (mode === "subscribe") {
+    const iso = nextEligibleMondayISO(); // Sat-9pm cutoff logic
+    const [y, mo, d] = iso.split("-").map(Number);
+    return new Date(y, mo - 1, d);
+  }
+  // one-off: current Wed-midnight..Wed-midnight window -> the following Monday's batch
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  const day = d.getDay();               // 0 Sun ... 3 Wed
+  const daysSinceWed = (day - 3 + 7) % 7;
+  const windowStart = new Date(d);
+  windowStart.setDate(d.getDate() - daysSinceWed); // most recent Wed 00:00
+  const nextMon = new Date(windowStart);
+  let toMon = (1 - windowStart.getDay() + 7) % 7;   // Wed -> next Mon = 5
+  if (toMon === 0) toMon = 7;
+  nextMon.setDate(windowStart.getDate() + toMon);
+  return nextMon;
+}
+
+function getBrandForMode(mode: "oneoff" | "subscribe"): string {
+  return strainForMonday(mondayForMode(mode));
 }
 
 // ===================== DATE HELPERS =====================
@@ -239,7 +263,7 @@ export default function Shop() {
     sendCAPIEvent("AddToCart", { eventId, customData: data });
   }
 
-  const { thisWeekBrand } = getBrandRotation();
+  const thisWeekBrand = getBrandForMode(buyMode);
 
   return (
     <>
@@ -258,7 +282,7 @@ export default function Shop() {
               <div className="yoy-shop-card-overlay"></div>
               <div className="yoy-shop-card-content">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-white mb-2">This week</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-white mb-2">You'll receive</p>
                   <img
                     src={`/${thisWeekBrand.toLowerCase()}_logo.png`}
                     alt={thisWeekBrand}
@@ -404,7 +428,7 @@ export default function Shop() {
 
               {/* Delivery line: dispatch date + charge */}
               <p className="mt-4 ml-3 text-sm text-slate-600">
-                Dispatch: <strong>{buyMode === "subscribe" ? `${formatDateUK(nextEligibleMondayISO())} (Monday)` : `${formatDateUK(nextDispatchISO())} ${weekdayFromISO(nextDispatchISO())}`}</strong>
+                Dispatch date: <strong>{buyMode === "subscribe" ? `${formatDateUK(nextEligibleMondayISO())} Monday` : `${formatDateUK(nextDispatchISO())} ${weekdayFromISO(nextDispatchISO())}`}</strong>
                 <span className="mx-2 text-slate-300">·</span>
                 Chilled next-day delivery <strong>£4.95</strong>
               </p>

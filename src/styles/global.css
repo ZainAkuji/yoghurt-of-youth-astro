@@ -26,7 +26,7 @@ a {
 
 .yoy-shop-card { position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(15,23,42,0.10); aspect-ratio: 3 / 2; }
 .yoy-shop-card-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.yoy-shop-card-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.1); }
+.yoy-shop-card-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.2); }
 .yoy-shop-card-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; padding: 24px; }
 .yoy-shop-card-logo { width: auto; max-width: 65%; max-height: 52px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4)); margin-bottom: 14px; }
 .yoy-shop-card-text { font-size: 14px; line-height: 1.6; color: #fff; }
