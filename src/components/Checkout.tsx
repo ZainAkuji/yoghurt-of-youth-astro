@@ -7,7 +7,7 @@ const gbp = (n: number) =>
 const cn = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(" ");
 
 const PRODUCTS = [
-  { id: "PLN", name: "PLN", price: 0.1, size: "250 mL" },
+  { id: "PLN", name: "PLN", price: 2.8, size: "250 mL" },
   { id: "BFC", name: "BFC", price: 2.9, size: "250 mL" },
   { id: "STR", name: "STR", price: 2.9, size: "250 mL" },
   { id: "MNG", name: "MNG", price: 2.9, size: "250 mL" },
@@ -23,7 +23,7 @@ function computeTotals(cart: Record<string, number>, discountPercent = 0, giftSt
   const flavItems = items.filter((i) => i.id !== "PLN");
   const plainQty = plainItems.reduce((s, i) => s + i.qty, 0);
   const flavQty = flavItems.reduce((s, i) => s + i.qty, 0);
-  const plainUnit = plainItems[0]?.price ?? 0.1;
+  const plainUnit = plainItems[0]?.price ?? 2.8;
   const flavUnit = flavItems[0]?.price ?? 2.9;
   const plainSubtotalRaw = plainQty * plainUnit;
   const flavSubtotalRaw = flavQty * flavUnit;
@@ -36,7 +36,7 @@ function computeTotals(cart: Record<string, number>, discountPercent = 0, giftSt
   const merchTotal = plainBundleTotal + flavBundleTotal;
   const fullPrice = plainSubtotalRaw + flavSubtotalRaw;
   const savings = Math.max(0, fullPrice - merchTotal);
-  const deliveryFee = merchTotal === 0 ? 0 : 0.1;
+  const deliveryFee = merchTotal === 0 ? 0 : 4.95;
   const discount = discountPercent > 0 ? Math.round(merchTotal * discountPercent) / 100 : 0;
   const total = merchTotal - discount + deliveryFee;
   return { items, qtyTotal, total, savings, merchTotal, deliveryFee, plainBundles, flavBundles, plainRemainder, flavRemainder, discount };
