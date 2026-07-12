@@ -303,7 +303,7 @@ export default function Shop() {
                 <p className="text-sm text-slate-600">
                   <a href="https://g.page/r/CWkxtud6iKYlEAE/review" target="_blank" rel="noopener noreferrer" className="font-semibold text-slate-800 hover:text-amber-500 transition"><span className="text-lg">★★★★★</span> 5.0 on Google</a>
                   <span className="mx-2 text-slate-800">·</span>
-                  <strong>100+</strong> satisfied customers
+                  100+ satisfied customers
                 </p>
                 <p className="mt-1 text-sm text-slate-600">
                   100+ billion CFU
