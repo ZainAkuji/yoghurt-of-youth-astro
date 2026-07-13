@@ -10,12 +10,21 @@ import Layout from "../layouts/Layout.astro";
   <!-- ===== FIXED HERO (sits behind, revealed at top, covered on scroll) ===== -->
   <div class="hero-fixed">
     <div class="hero-inner">
-      <img class="hero-img" src="/hero_bg.webp" alt="" />
+      <video
+        class="hero-img"
+        src="/cherry_blossom_forest.mp4"
+        poster="/hero_bg.webp"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="auto"
+      ></video>
       <div class="hero-overlay"></div>
 
       <!-- Slogan -->
       <div class="absolute top-[170px] left-4 sm:left-8 z-20">
-        <p class="text-white font-mono font-bold text-xl sm:text-3xl md:text-6xl leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">
+        <p class="text-white font-mono font-bold text-3xl md:text-6xl leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">
           By L reuteri.
         </p>
       </div>
@@ -25,7 +34,7 @@ import Layout from "../layouts/Layout.astro";
         <img
           src="/logo_white_transparent.png"
           alt="Yoghurt of Youth logo"
-          class="w-auto h-24 sm:h-36 md:h-56 lg:h-72 max-w-[88%] object-contain"
+          class="w-auto h-40 sm:h-48 md:h-56 lg:h-72 max-w-[88%] object-contain"
         />
       </div>
     </div>
