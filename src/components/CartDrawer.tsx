@@ -64,12 +64,6 @@ export default function CartDrawer() {
   const { items, qtyTotal, merchTotal, savings, plainBundles, flavBundles, plainRemainder, flavRemainder } = computeTotals(cart);
 
   function pay() {
-    const eventId = newEventId();
-    const data = { value: merchTotal, currency: "GBP", num_items: qtyTotal };
-    if (typeof window !== "undefined" && (window as any).fbq) {
-      (window as any).fbq("track", "InitiateCheckout", data, { eventID: eventId });
-    }
-    sendCAPIEvent("InitiateCheckout", { eventId, customData: data });
     if (typeof window !== "undefined") {
       const klaviyo = ((window as any).klaviyo = (window as any).klaviyo || []);
       klaviyo.push(["track", "Started Checkout", {

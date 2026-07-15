@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useStore } from "@nanostores/react";
 import { cart as cartStore } from "../stores/cart";
+import { sendCAPIEvent, newEventId } from "../capi";
 
 const gbp = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
@@ -116,6 +117,23 @@ export default function Checkout() {
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+
+  // Fire InitiateCheckout once, on arrival at checkout (catches every route in:
+  // drawer Pay, Buy now, direct link, subscription)
+  const [icFired, setIcFired] = useState(false);
+  useEffect(() => {
+    if (!mounted || icFired) return;
+    if (!isSubscription && qtyTotal === 0) return; // wait for cart to hydrate
+    const eventId = newEventId();
+    const data = isSubscription
+      ? { value: Number(String(subscriptionPlan?.priceLabel || "").replace(/[^\d.]/g, "")) || 0, currency: "GBP", num_items: 7 }
+      : { value: total, currency: "GBP", num_items: qtyTotal };
+    if ((window as any).fbq) {
+      (window as any).fbq("track", "InitiateCheckout", data, { eventID: eventId });
+    }
+    sendCAPIEvent("InitiateCheckout", { eventId, customData: data });
+    setIcFired(true);
+  }, [mounted, icFired, isSubscription, subscriptionPlan, total, qtyTotal]);
 
   // hydrate from draft
   useEffect(() => {
