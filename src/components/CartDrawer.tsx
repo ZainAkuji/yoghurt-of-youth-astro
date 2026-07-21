@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useStore } from "@nanostores/react";
 import { cart as cartStore, clearCart as storeClear, drawerOpen as drawerOpenStore } from "../stores/cart";
-import { sendCAPIEvent, newEventId } from "../capi";
 
 const gbp = (n: number) => new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
 const cn = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(" ");
@@ -64,15 +63,6 @@ export default function CartDrawer() {
   const { items, qtyTotal, merchTotal, savings, plainBundles, flavBundles, plainRemainder, flavRemainder } = computeTotals(cart);
 
   function pay() {
-    if (typeof window !== "undefined") {
-      const klaviyo = ((window as any).klaviyo = (window as any).klaviyo || []);
-      klaviyo.push(["track", "Started Checkout", {
-        value: merchTotal,
-        ItemNames: items.map((i) => `${i.name} × ${i.qty}`),
-        Items: items.map((i) => ({ ProductName: i.name, Quantity: i.qty, ItemPrice: i.price, RowTotal: Number((i.qty*i.price).toFixed(2)) })),
-        CheckoutURL: "https://yoghurtofyouth.co.uk/shop?cart=open",
-      }]);
-    }
     window.location.href = "/checkout";
   }
 

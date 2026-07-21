@@ -135,6 +135,31 @@ export default function Checkout() {
     setIcFired(true);
   }, [mounted, icFired, isSubscription, subscriptionPlan, total, qtyTotal]);
 
+  // Klaviyo "Started Checkout" — fires on arrival at checkout, so identified
+  // visitors (email-list signups) who reach here but don't pay enter the
+  // abandoned-checkout flow. Anonymous visitors attach to no profile (Klaviyo
+  // ignores them), which is expected.
+  const [klFired, setKlFired] = useState(false);
+  useEffect(() => {
+    if (!mounted || klFired) return;
+    if (isSubscription) return;            // one-off carts only
+    if (qtyTotal === 0) return;            // wait for cart to hydrate
+    if (typeof window === "undefined") return;
+    const klaviyo = ((window as any).klaviyo = (window as any).klaviyo || []);
+    klaviyo.push(["track", "Started Checkout", {
+      value: total,
+      ItemNames: lines,
+      Items: totalsWithGift.items.map((i: any) => ({
+        ProductName: i.name,
+        Quantity: i.qty,
+        ItemPrice: i.price,
+        RowTotal: Number((i.qty * i.price).toFixed(2)),
+      })),
+      CheckoutURL: "https://yoghurtofyouth.co.uk/shop?cart=open",
+    }]);
+    setKlFired(true);
+  }, [mounted, klFired, isSubscription, qtyTotal, total, lines, totalsWithGift]);
+
   // hydrate from draft
   useEffect(() => {
     const raw = sessionStorage.getItem("yoy_checkout_draft");
