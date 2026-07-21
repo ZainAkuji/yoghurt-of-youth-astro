@@ -407,7 +407,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
-      const ownerEmail = process.env.OWNER_EMAIL || "zainul_a@hotmail.co.uk";
+      const ownerEmail = process.env.OWNER_EMAIL || "zainul.akuji@gmail.com";
 
       // SUBSCRIPTION
       if (session.mode === "subscription") {
