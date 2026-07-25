@@ -90,6 +90,9 @@ export default function Header({ brand, transparentHero = false }: { brand: stri
                       <a href="/skin" className="block px-4 py-2 text-sm text-center text-slate-800 hover:bg-slate-100 hover:text-amber-500 transition-colors">
                         The Gut-Skin Axis
                       </a>
+                      <a href="/hormones" className="block px-4 py-2 text-sm text-center text-slate-800 hover:bg-slate-100 hover:text-amber-500 transition-colors">
+                        Gut & Hormones
+                      </a>
                       <a href="/compare" className="block px-4 py-2 text-sm text-center text-slate-800 hover:bg-slate-100 hover:text-amber-500 transition-colors">
                         L reuteri vs Fermented Foods
                       </a>
