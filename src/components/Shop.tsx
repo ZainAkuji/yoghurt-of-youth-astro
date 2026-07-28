@@ -494,7 +494,7 @@ export default function Shop() {
                     <>
                       <p>Choose from <strong>PLN</strong> (plain), <strong>BFC</strong> (black forest chocolate), <strong>STR</strong> (strawberry), and <strong>MNG</strong> (mango).</p>
                       <p className="mt-2">Each batch is <strong>7 bottles</strong> of your chosen flavour. <strong>MIX</strong> gives you 2 BFC, 3 STR, and 2 MNG. <strong>Taster</strong> is 1 of each flavour (4 bottles).</p>
-                      <p className="mt-2">Buy 7 and pay for 6 , the bundle saving is applied automatically in your basket.</p>
+                      <p className="mt-2">Buy 7 and pay for 6, the bundle saving is applied automatically in your basket.</p>
                     </>
                   ),
                 },
