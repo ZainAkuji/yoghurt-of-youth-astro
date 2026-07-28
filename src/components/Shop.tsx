@@ -264,12 +264,24 @@ export default function Shop() {
   }
 
   const thisWeekBrand = getBrandForMode(buyMode);
+  const _thisMonday = mondayForMode(buyMode);
+  const nextWeekBrand = strainForMonday(new Date(_thisMonday.getTime() + 7 * 86400000));
+  const weekAfterBrand = strainForMonday(new Date(_thisMonday.getTime() + 14 * 86400000));
 
   return (
     <>
       {/* ===================== PART 1: TWO-COLUMN SHOP ===================== */}
       <section id="flavours" className="scroll-mt-32 md:scroll-mt-24 w-full bg-white text-slate-900 py-12">
         <div className="mx-auto max-w-6xl px-5">
+          <div className="mb-8 rounded-2xl px-5 py-4">
+            <p className="text-xl uppercase tracking-[0.15em] text-slate-900 font-semibold mb-2">Explainer</p>
+            <p className="text-sm text-slate-700 leading-relaxed">
+              Each week we ferment a different one of our three researched <em>L. reuteri</em> strains, rotating on a three-week cycle. You don't pick the strain, you'll receive whichever one is being made for your delivery, so over three weeks you experience all three. No hassle, no fuss, just the simplest way to experience all three of our researched strains over the cycle.
+            </p>
+            <p className="mt-2 text-sm text-slate-700 leading-relaxed">
+              <span className="font-semibold text-slate-900">This order will be {thisWeekBrand}</span> · next week will be {nextWeekBrand} · then {weekAfterBrand}.
+            </p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-start">
 
             {/* ---------- LEFT: week's strain card ---------- */}
@@ -297,6 +309,10 @@ export default function Shop() {
               <h1 className="ml-3 text-2xl sm:text-3xl font-bold text-slate-900">
                 Yoghurt of Youth · <span className="text-amber-500">{thisWeekBrand}</span>
               </h1>
+
+              <p className="mt-2 ml-3 text-xs text-slate-600 leading-relaxed">
+                Our strains rotate weekly on a three-week cycle, this is the one you'll receive with this order.
+              </p>
 
               {/* Review line + benefits */}
               <div className="mt-3 ml-3">
