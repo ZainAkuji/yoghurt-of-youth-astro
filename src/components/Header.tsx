@@ -6,6 +6,7 @@ export default function Header({ brand, transparentHero = false }: { brand: stri
   const [scrolled, setScrolled] = React.useState(false);
   const [hovered, setHovered] = React.useState(false);
   const [scienceOpen, setScienceOpen] = React.useState(false);
+  const [infoOpen, setInfoOpen] = React.useState(false);
   const $cart = useStore(cart);
   const itemsCount = totalCount($cart);
 
@@ -24,6 +25,13 @@ export default function Header({ brand, transparentHero = false }: { brand: stri
     window.addEventListener("click", close);
     return () => window.removeEventListener("click", close);
   }, [scienceOpen]);
+
+  React.useEffect(() => {
+    if (!infoOpen) return;
+    const close = () => setInfoOpen(false);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, [infoOpen]);
 
   // Transparent mode only when: hero page AND at top AND not hovered.
   const isTransparent = transparentHero && !scrolled && !hovered;
@@ -50,9 +58,35 @@ export default function Header({ brand, transparentHero = false }: { brand: stri
             </a>
 
             <nav className={`flex items-center gap-6 font-medium text-xs sm:text-sm md:text-base transition-colors duration-300 ${isTransparent ? "text-white" : "text-slate-900"}`}>
-              <div className="flex items-center gap-4 sm:gap-6 leading-none">
+              <div className="flex items-center flex-wrap gap-3 sm:gap-6 leading-none">
                 <a href="/shop" className="hover:text-amber-400 transition-colors">Shop</a>
-                <a href="/about" className="hover:text-amber-400 transition-colors">About</a>
+
+                {/* Individual links — visible xs and up */}
+                <a href="/about" className="hidden xs:inline hover:text-amber-400 transition-colors">About</a>
+                <a href="/story" className="hidden xs:inline hover:text-amber-400 transition-colors">Our Story</a>
+
+                {/* Info dropdown — visible only below xs */}
+                <div className="relative xs:hidden">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setInfoOpen((o) => !o); }}
+                    className="flex items-center gap-1 hover:text-amber-400 transition-colors"
+                    aria-haspopup="true"
+                    aria-expanded={infoOpen}
+                  >
+                    Info
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`w-3 h-3 transition-transform duration-200 ${infoOpen ? "rotate-180" : ""}`}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {infoOpen && (
+                    <div className="absolute left-1/2 -translate-x-1/2 mt-4 w-28 rounded-xl bg-white border border-slate-200 shadow-xl py-2 z-50">
+                      <a href="/about" className="block px-4 py-2 text-sm text-center text-slate-800 hover:bg-slate-100 hover:text-amber-500 transition-colors">About</a>
+                      <a href="/story" className="block px-4 py-2 text-sm text-center text-slate-800 hover:bg-slate-100 hover:text-amber-500 transition-colors">Our Story</a>
+                      <a href="/contact" className="block px-4 py-2 text-sm text-center text-slate-800 hover:bg-slate-100 hover:text-amber-500 transition-colors">Contact</a>
+                    </div>
+                  )}
+                </div>
 
                 {/* Science dropdown */}
                 <div className="relative">
@@ -70,7 +104,7 @@ export default function Header({ brand, transparentHero = false }: { brand: stri
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2.5"
-                      className={`w-3 h-3 mt-1 transition-transform duration-200 ${scienceOpen ? "rotate-180" : ""}`}
+                      className={`w-3 h-3 transition-transform duration-200 ${scienceOpen ? "rotate-180" : ""}`}
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                     </svg>
@@ -102,6 +136,9 @@ export default function Header({ brand, transparentHero = false }: { brand: stri
                     </div>
                   )}
                 </div>
+
+                {/* Contact — visible xs and up */}
+                <a href="/contact" className="hidden xs:inline hover:text-amber-400 transition-colors">Contact</a>
               </div>
 
               {/* Basket button */}

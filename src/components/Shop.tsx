@@ -294,7 +294,7 @@ export default function Shop() {
               <div className="yoy-shop-card-overlay"></div>
               <div className="yoy-shop-card-content">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-white mb-2">You'll receive</p>
+                  <p className="yoy-shop-card-label text-xs uppercase tracking-[0.2em] text-white mb-2">You'll receive</p>
                   <img
                     src={`/${thisWeekBrand.toLowerCase()}_logo.png`}
                     alt={thisWeekBrand}
