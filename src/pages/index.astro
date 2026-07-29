@@ -40,8 +40,21 @@ import Layout from "../layouts/Layout.astro";
     </div>
   </div>
 
-  <!-- Spacer that reserves the hero's on-screen height, so the white panel starts at the hero's bottom edge -->
-  <div class="hero-spacer" aria-hidden="true"></div>
+  <!-- Mission band: sits over the hero, scrolls up with the panel -->
+  <section class="mission-band">
+    <div class="max-w-xl px-8 text-left">
+      <h2 class="text-3xl md:text-5xl font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">Real, not hype</h2>
+      <p class="mt-4 text-lg md:text-xl text-white/95 leading-relaxed drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
+        We exist to make the fresh, live <em>L. reuteri</em> yoghurt we couldn't find
+        anywhere, built on real science.
+      </p>
+      <div class="mt-7">
+        <a href="/shop" class="rounded-2xl bg-amber-400 text-slate-900 px-6 py-2.5 text-sm font-semibold hover:bg-amber-300 transition">
+          Shop Now
+        </a>
+      </div>
+    </section>
+  </section>
 
   <!-- ===== WHITE PANEL (scrolls up over the hero, rounded top corners) ===== -->
   <div class="white-panel">
@@ -136,7 +149,7 @@ import Layout from "../layouts/Layout.astro";
           didn't. With a background in physics, I went deep into the research on the
           gut microbiome, and found there was nowhere in the UK to buy a fresh,
           live, strain-specific <em>L. reuteri</em> yoghurt. So I learned to make it
-          properly, and made it honestly, and now it's here for anyone who wants it.
+          efficiently, and now it's here for anyone who wants it.
         </p>
         <a href="/story" class="mt-4 inline-block text-sm font-semibold text-slate-900 underline hover:text-amber-500 transition">
           Read our story →
@@ -173,10 +186,13 @@ import Layout from "../layouts/Layout.astro";
       inset: 0;
       background: rgba(0,0,0,0.25);
     }
-    /* Spacer occupies the same height as the hero so the white panel begins at its bottom edge */
-    .hero-spacer {
-      width: 100%;
-      height: calc(100vh - 28px);
+    .mission-band {
+      position: relative;
+      z-index: 1;
+      height: calc(90vh - 28px);   /* exactly the hero's on-screen height */
+      display: flex;
+      align-items: flex-end;        /* pin content to the BOTTOM of the viewport */
+      padding-bottom: 80px;         /* gap from the very bottom */
     }
     /* White panel scrolls up over the fixed hero */
     .white-panel {
