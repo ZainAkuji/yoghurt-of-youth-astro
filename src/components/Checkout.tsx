@@ -249,9 +249,10 @@ export default function Checkout() {
 
       <div className="mt-6">
         <input value={note} onChange={(e)=>setNote(e.target.value)} placeholder="Order note (optional)" className={inputCls} />
+        <p className="mt-2 ml-3 text-xs text-slate-500">Have a one-time discount code? Apply it at the secure checkout on the next step.</p>
       </div>
 
-      {!isSubscription && (
+      {/*{!isSubscription && (
         <div className="mt-4">
           <div className="flex gap-2">
             <input value={giftCode} onChange={(e)=>setGiftCode(e.target.value)} placeholder="Strawberry promo code" className={cn(inputCls, "flex-1")} />
@@ -263,9 +264,8 @@ export default function Checkout() {
               <div className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-400 text-sm flex items-center">Not applied</div>
             )}
           </div>
-          <p className="mt-2 ml-3 text-xs text-slate-500">Have a one-time discount code? Apply it at the secure checkout on the next step.</p>
         </div>
-      )}
+      )}*/}
 
       {!isSubscription && qtyTotal > 0 && (
         <div className="mt-6 rounded-2xl bg-slate-50 border border-slate-200 p-5 text-sm text-slate-700">
