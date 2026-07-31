@@ -348,9 +348,9 @@ export default function Shop() {
 
               {/* Strain description */}
               <p className="mt-4 ml-3 text-sm text-slate-700 leading-relaxed">
-                {thisWeekBrand === "PRCXN" && (<>Yoghurt fermented by <em>L. reuteri</em> DSM 17648.<br />Studied for anti-<em>H. pylori</em> properties.<br />Stage 1 in the 3 week rotation.</>)}
-                {thisWeekBrand === "SPCTRL" && (<>Yoghurt fermented by <em>L. reuteri</em> DSM 17938.<br />Studied for antipathogenic and anti-<em>Candida</em> properties.<br />Stage 2 in the 3 week rotation.</>)}
-                {thisWeekBrand === "LVLV" && (<>Yoghurt fermented by <em>L. reuteri</em> ATCC PTA 6475.<br />Studied for antipathogenic and oxytocin-stimulating properties.<br />Stage 3 in the 3 week rotation.</>)}
+                {thisWeekBrand === "PRCXN" && (<>Yoghurt fermented by <em>L. reuteri</em> DSM 17648.<br />Studied for anti-<em>H. pylori</em> properties.</>)}
+                {thisWeekBrand === "SPCTRL" && (<>Yoghurt fermented by <em>L. reuteri</em> DSM 17938.<br />Studied for antipathogenic and anti-<em>Candida</em> properties.</>)}
+                {thisWeekBrand === "LVLV" && (<>Yoghurt fermented by <em>L. reuteri</em> ATCC PTA 6475.<br />Studied for antipathogenic and oxytocin-stimulating properties.</>)}
               </p>
 
               {/* Vertical Subscribe / One-time toggle */}
