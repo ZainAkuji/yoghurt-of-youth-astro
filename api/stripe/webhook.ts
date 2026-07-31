@@ -86,15 +86,25 @@ function safeJoinAddress(addr: any) {
   return parts.join(", ");
 }
 
-function subscriptionLinesFromPlanKey(planKey: string) {
-  const key = String(planKey || "").toUpperCase();
+const FLAVOUR_NAMES: Record<string, string> = {
+  PLN: "Plain", BFC: "Black Forest", STR: "Strawberry", MNG: "Mango", MIX: "Mixed",
+};
+
+const MIX_CONTENTS: Record<string, string> = {
+  "4": "1× BFC, 2× STR, 1× MNG",
+  "7": "2× BFC, 3× STR, 2× MNG",
+  "14": "4× BFC, 6× STR, 4× MNG",
+};
+
+function subscriptionLines(planKey: string, tier: string) {
+  const key = String(planKey || "PLN").toUpperCase();
+  const t = String(tier || "7");
+  const bottles = Number(t) || 7;
+
   if (key === "MIX") {
-    return ["Weekly box: 2× BFC, 3× STR, 2× MNG (7 bottles)"];
+    return [`Weekly box: ${MIX_CONTENTS[t] || MIX_CONTENTS["7"]} (${bottles} bottles)`];
   }
-  if (key) {
-    return [`Weekly box: 7× ${key} (7 bottles)`];
-  }
-  return ["Weekly box (7 bottles)"];
+  return [`Weekly box: ${bottles}× ${key} (${FLAVOUR_NAMES[key] || key})`];
 }
 
 type EmailPayload = Record<string, any>;
@@ -298,7 +308,7 @@ function buildSubCustomerHtml(p: {
       <h4 style="margin:20px 0 8px;font-size:16px;">What you'll receive each week</h4>
       <pre style="background:#f8fafc;padding:10px;border:1px solid #e2e8f0;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;">${p.orderLines}</pre>
       ${noteHtml}
-      <p style="margin:18px 0 0;">We alternate <strong>PRCXN</strong> and <strong>SPCTRL</strong> by week.</p>
+      <p style="margin:18px 0 0;">We rotate through <strong>PRCXN</strong>, <strong>SPCTRL</strong> and <strong>LVLV</strong> on a three-week cycle.</p>
       <p style="margin:14px 0 0;">You will receive a text when your order is dispatched.</p>
       <p style="margin:14px 0 0;">If you have any questions, please email <a href="mailto:support@yoghurtofyouth.co.uk" style="color:#0ea5e9;font-weight:600;text-decoration:none;">support@yoghurtofyouth.co.uk</a>.</p>
       <p style="margin:14px 0 0;">To cancel, please email <a href="mailto:support@yoghurtofyouth.co.uk" style="color:#0ea5e9;font-weight:600;text-decoration:none;">support@yoghurtofyouth.co.uk</a> and include your <strong>name</strong> and <strong>address</strong>. We will cancel your subscription shortly.</p>
@@ -417,8 +427,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           sub = await stripe.subscriptions.retrieve(subId);
         }
         const sm = sub?.metadata || {};
-        const planKey = String(sm.planKey || "");
-        const linesArr = subscriptionLinesFromPlanKey(planKey);
+        const planKey = String(sm.planKey || "PLN");
+        const tier = String(sm.tier || "7");
+        const linesArr = subscriptionLines(planKey, tier);
 
         let weeklyPriceText = "";
         try {

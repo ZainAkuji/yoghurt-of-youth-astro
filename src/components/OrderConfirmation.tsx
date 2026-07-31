@@ -4,6 +4,16 @@ import { clearCart as storeClear } from "../stores/cart";
 const gbp = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
 
+const FLAVOUR_NAMES: Record<string, string> = {
+  PLN: "Plain", BFC: "Black Forest", STR: "Strawberry", MNG: "Mango", MIX: "Mixed",
+};
+
+const MIX_CONTENTS: Record<string, string> = {
+  "4": "1 BFC, 2 STR, 1 MNG",
+  "7": "2 BFC, 3 STR, 2 MNG",
+  "14": "4 BFC, 6 STR, 4 MNG",
+};
+
 function formatDateUK(iso: string) {
   if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso || "";
   const [y, m, d] = iso.split("-");
@@ -29,27 +39,31 @@ function buildConfirmOrderFromDraft(draft: any, orderId: string): ConfirmOrder |
   // SUBSCRIPTION
   if (draft?.kind === "subscription") {
     const plan = draft?.plan || {};
-    const planKey = String(plan?.key || "");
-    const planLabel = String(plan?.label || planKey || "Plan");
+    const planKey = String(plan?.key || "PLN");
+    const tier = String(plan?.tier || "7");
+    const weekly = Number(plan?.weekly || 0);
+    const bottles = Number(tier) || 7;
+
     const firstISO = String(draft?.first_delivery_iso || "");
     const firstText =
       String(draft?.first_delivery_text || "") ||
       (firstISO ? `${formatDateUK(firstISO)} (${weekdayFromISO(firstISO)})` : "");
+
     const lines: string[] =
-      planKey === "MIX" ? ["Weekly box: 2× BFC, 3× STR, 2× MNG (7 bottles)"]
-      : planKey ? [`Weekly box: 7× ${planKey} (${planLabel})`]
-      : ["Weekly box (7 bottles)"];
-    const priceLabel = String(plan?.priceLabel || "");
-    const numeric = Number(priceLabel.replace(/[^\d.]/g, "")) || 0;
+      planKey === "MIX"
+        ? [`Weekly box: ${MIX_CONTENTS[tier] || MIX_CONTENTS["7"]} (${bottles} bottles)`]
+        : [`Weekly box: ${bottles} × ${planKey} (${FLAVOUR_NAMES[planKey] || planKey})`];
+
     return {
       orderId: orderId || "",
       formattedDate: firstText || "Monday",
       deliveryWindow: String(draft?.delivery_window || "18:30–20:00"),
-      lines, qtyTotal: 7,
-      plainQty: planKey === "PLN" ? 7 : planKey === "MIX" ? 1 : 0,
-      flavQty: planKey === "MIX" ? 6 : ["BFC", "STR", "MNG"].includes(planKey) ? 7 : 0,
-      totalText: numeric ? gbp(numeric) : priceLabel || "—",
-      totalValue: numeric,
+      lines,
+      qtyTotal: bottles,
+      plainQty: planKey === "PLN" ? bottles : 0,
+      flavQty: planKey === "PLN" ? 0 : bottles,
+      totalText: weekly ? gbp(weekly) : "—",
+      totalValue: weekly,
       address: String(draft?.customer?.address || ""),
       name: String(draft?.customer?.name || ""),
     };
@@ -209,7 +223,7 @@ export default function OrderConfirmation() {
 
         {isSub && (
           <p className="mt-6 text-slate-500 text-xs leading-relaxed">
-            We rotate through PRCXN, SPCTRL, and LVLV by week. Your yoghurt is fermented the day before dispatch for freshness. Chilled next-day delivery is £4.95.
+            We rotate through PRCXN, SPCTRL, and LVLV by week. Your yoghurt is fermented the day before dispatch for freshness.
           </p>
         )}
 

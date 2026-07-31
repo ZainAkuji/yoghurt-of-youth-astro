@@ -3,18 +3,30 @@ import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
-function getPriceId(planKey: string) {
+const TIERS = ["4", "7", "14"] as const;
+const FLAVOURS = ["PLN", "BFC", "STR", "MNG", "MIX"] as const;
+
+function getPriceId(planKey: string, tier: string) {
+  const group = planKey === "PLN" ? "PLN" : "FLAV";
   const map: Record<string, string | undefined> = {
-    PLN: process.env.STRIPE_PRICE_SUB_PLN,
-    BFC: process.env.STRIPE_PRICE_SUB_BFC,
-    STR: process.env.STRIPE_PRICE_SUB_STR,
-    MNG: process.env.STRIPE_PRICE_SUB_MNG,
-    MIX: process.env.STRIPE_PRICE_SUB_MIX,
+    PLN_4:   process.env.STRIPE_PRICE_SUB_PLN_4,
+    PLN_7:   process.env.STRIPE_PRICE_SUB_PLN_7,
+    PLN_14:  process.env.STRIPE_PRICE_SUB_PLN_14,
+    FLAV_4:  process.env.STRIPE_PRICE_SUB_FLAV_4,
+    FLAV_7:  process.env.STRIPE_PRICE_SUB_FLAV_7,
+    FLAV_14: process.env.STRIPE_PRICE_SUB_FLAV_14,
   };
-  const id = map[String(planKey)];
-  if (!id) throw new Error("Missing Stripe price for plan: " + planKey);
+  const key = `${group}_${tier}`;
+  const id = map[key];
+  if (!id) throw new Error("Missing Stripe price for: " + key);
   return id;
 }
+
+const MIX_CONTENTS: Record<string, string> = {
+  "4": "1 BFC, 2 STR, 1 MNG",
+  "7": "2 BFC, 3 STR, 2 MNG",
+  "14": "4 BFC, 6 STR, 4 MNG",
+};
 
 // Next Monday 21:00 (server local time). If that's < 48h away, push to the Monday after.
 function nextMonday2100With48hRuleUnix(): number {
@@ -48,10 +60,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-    const { planKey, customer, note } = req.body || {};
+    const { planKey, tier, customer, note } = req.body || {};
     if (!planKey) return res.status(400).json({ error: "Missing planKey" });
 
-    const price = getPriceId(String(planKey));
+    const tierStr = String(tier || "7");
+    if (!TIERS.includes(tierStr as any)) return res.status(400).json({ error: "Invalid tier" });
+    if (!FLAVOURS.includes(String(planKey) as any)) return res.status(400).json({ error: "Invalid plan" });
+
+    const price = getPriceId(String(planKey), tierStr);
     
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -68,11 +84,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // ✅ first charge occurs at trial_end; repeats weekly because Price is weekly
         trial_end: trialEnd,
         metadata: {
-          kind: "weekly_gut_punch",
+          kind: "weekly_subscription",
           planKey: String(planKey),
-          name: String(customer.name || ""),
-          phone: String(customer.phone || ""),
-          address: String(customer.address || ""),
+          tier: tierStr,
+          bottles: tierStr,
+          contents: planKey === "MIX" ? MIX_CONTENTS[tierStr] : `${tierStr} × ${planKey}`,
+          name: String(customer?.name || ""),
+          phone: String(customer?.phone || ""),
+          address: String(customer?.address || ""),
           note: String(note || ""),
         },
       },

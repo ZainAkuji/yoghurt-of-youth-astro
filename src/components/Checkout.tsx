@@ -14,43 +14,49 @@ const PRODUCTS = [
   { id: "MNG", name: "MNG", price: 2.9, size: "250 mL" },
 ];
 
+const DELIVERY = (n: number) => (n <= 0 ? 0 : n <= 4 ? 3.5 : n <= 9 ? 4.95 : 0);
+
 function computeTotals(cart: Record<string, number>, discountPercent = 0, giftStrQty = 0) {
   const items = Object.entries(cart).map(([id, qty]) => {
     const p = PRODUCTS.find((x) => x.id === id);
     return p ? { ...p, qty } : null;
   }).filter(Boolean) as Array<(typeof PRODUCTS)[number] & { qty: number }>;
-  const qtyTotal = items.reduce((s, i) => s + i.qty, 0) + (giftStrQty || 0);
-  const plainItems = items.filter((i) => i.id === "PLN");
-  const flavItems = items.filter((i) => i.id !== "PLN");
-  const plainQty = plainItems.reduce((s, i) => s + i.qty, 0);
-  const flavQty = flavItems.reduce((s, i) => s + i.qty, 0);
-  const plainUnit = plainItems[0]?.price ?? 2.8;
-  const flavUnit = flavItems[0]?.price ?? 2.9;
-  const plainSubtotalRaw = plainQty * plainUnit;
-  const flavSubtotalRaw = flavQty * flavUnit;
-  const plainBundles = Math.floor(plainQty / 7);
-  const plainRemainder = plainQty % 7;
-  const plainBundleTotal = plainBundles * 6 * plainUnit + plainRemainder * plainUnit;
-  const flavBundles = Math.floor(flavQty / 7);
-  const flavRemainder = flavQty % 7;
-  const flavBundleTotal = flavBundles * 6 * flavUnit + flavRemainder * flavUnit;
-  const merchTotal = plainBundleTotal + flavBundleTotal;
-  const fullPrice = plainSubtotalRaw + flavSubtotalRaw;
-  const savings = Math.max(0, fullPrice - merchTotal);
-  const deliveryFee = merchTotal === 0 ? 0 : 4.95;
+
+  const plainQty = items.filter(i => i.id === "PLN").reduce((s, i) => s + i.qty, 0);
+  const flavQty  = items.filter(i => i.id !== "PLN").reduce((s, i) => s + i.qty, 0);
+  const bottles  = plainQty + flavQty;
+  const qtyTotal = bottles + (giftStrQty || 0);
+
+  const freeTotal = Math.floor(bottles / 7);
+  const freePlain = Math.min(freeTotal, plainQty);
+  const freeFlav  = freeTotal - freePlain;
+
+  const merchTotal = (plainQty - freePlain) * 2.8 + (flavQty - freeFlav) * 2.9;
+  const fullPrice  = plainQty * 2.8 + flavQty * 2.9;
+  const savings    = Math.max(0, fullPrice - merchTotal);
+  const deliveryFee = DELIVERY(bottles);
+
   const discount = discountPercent > 0 ? Math.round(merchTotal * discountPercent) / 100 : 0;
   const total = merchTotal - discount + deliveryFee;
-  return { items, qtyTotal, total, savings, merchTotal, deliveryFee, plainBundles, flavBundles, plainRemainder, flavRemainder, discount };
+
+  return { items, qtyTotal, total, savings, merchTotal, deliveryFee, discount, plainQty, flavQty, freeTotal, bottles };
 }
 
-const SUBSCRIPTION_PLANS = [
-  { key: "PLN", label: "PLN", priceLabel: "£15.12", wasLabel: "£16.80" },
-  { key: "BFC", label: "BFC", priceLabel: "£15.66", wasLabel: "£17.40" },
-  { key: "STR", label: "STR", priceLabel: "£15.66", wasLabel: "£17.40" },
-  { key: "MNG", label: "MNG", priceLabel: "£15.66", wasLabel: "£17.40" },
-  { key: "MIX", label: "MIX", priceLabel: "£15.66", wasLabel: "£17.40" },
-] as const;
-type SubscriptionPlan = (typeof SUBSCRIPTION_PLANS)[number];
+const SUB_PRICING: Record<string, { discount: number; delivery: number; plnWas: number; plnNow: number; flavWas: number; flavNow: number }> = {
+  "4":  { discount: 5,  delivery: 3.5,  plnWas: 11.20, plnNow: 10.64, flavWas: 11.60, flavNow: 11.02 },
+  "7":  { discount: 10, delivery: 4.95, plnWas: 16.80, plnNow: 15.12, flavWas: 17.40, flavNow: 15.66 },
+  "14": { discount: 20, delivery: 0,    plnWas: 33.60, plnNow: 26.88, flavWas: 34.80, flavNow: 27.84 },
+};
+
+const MIX_CONTENTS: Record<string, string> = {
+  "4": "1 BFC, 2 STR, 1 MNG",
+  "7": "2 BFC, 3 STR, 2 MNG",
+  "14": "4 BFC, 6 STR, 4 MNG",
+};
+
+const FLAVOUR_NAMES: Record<string, string> = {
+  PLN: "Plain", BFC: "Black Forest", STR: "Strawberry", MNG: "Mango", MIX: "Mixed",
+};
 
 // date helpers
 function toISODate(d: Date) { const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0"); return `${y}-${m}-${day}`; }
@@ -69,17 +75,22 @@ export default function Checkout() {
 
   // Read mode + plan from URL
   const [mode, setMode] = useState<"oneoff" | "subscription">("oneoff");
-  const [subscriptionPlan, setSubscriptionPlan] = useState<SubscriptionPlan | null>(null);
+  const [subPlan, setSubPlan] = useState<string>("PLN");
+  const [subTier, setSubTier] = useState<string>("7");
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("mode") === "subscription") {
       setMode("subscription");
-      const planKey = params.get("plan") || "PLN";
-      setSubscriptionPlan(SUBSCRIPTION_PLANS.find((p) => p.key === planKey) || SUBSCRIPTION_PLANS[0]);
+      setSubPlan(params.get("plan") || "PLN");
+      setSubTier(params.get("tier") || "7");
     }
   }, []);
 
-  const isSubscription = mode === "subscription" && !!subscriptionPlan;
+  const isSubscription = mode === "subscription";
+  const subP = SUB_PRICING[subTier] || SUB_PRICING["7"];
+  const subNow = subPlan === "PLN" ? subP.plnNow : subP.flavNow;
+  const subWas = subPlan === "PLN" ? subP.plnWas : subP.flavWas;
+  const subWeekly = subNow + subP.delivery;
   const firstISO = nextEligibleMondayISO();
   const firstText = `${formatDateUK(firstISO)} ${weekdayFromISO(firstISO)}`;
   const date = nextDispatchISO();
@@ -102,7 +113,7 @@ export default function Checkout() {
   const giftStrQty = normalizedGiftCode === "YOY25" ? 1 : 0;
 
   const totalsWithGift = useMemo(() => computeTotals(cart, discountPercent, giftStrQty), [cart, discountPercent, giftStrQty]);
-  const { qtyTotal, total, savings, plainBundles, flavBundles, plainRemainder, flavRemainder, deliveryFee } = totalsWithGift;
+  const { qtyTotal, total, savings, deliveryFee, merchTotal, freeTotal } = totalsWithGift;
 
   const lines = Object.entries(cart).map(([id, qty]) => {
     const p = PRODUCTS.find((p) => p.id === id);
@@ -113,7 +124,7 @@ export default function Checkout() {
 
   const normalizedPostcode = postcode.trim().toUpperCase();
   const fullAddress = [streetAddress.trim(), townCity.trim(), normalizedPostcode].filter(Boolean).join(", ");
-  const valid = isSubscription ? true : (qtyTotal > 0 && !!date);
+  const valid = isSubscription ? true : (qtyTotal >= 3 && !!date);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -126,14 +137,14 @@ export default function Checkout() {
     if (!isSubscription && qtyTotal === 0) return; // wait for cart to hydrate
     const eventId = newEventId();
     const data = isSubscription
-      ? { value: Number(String(subscriptionPlan?.priceLabel || "").replace(/[^\d.]/g, "")) || 0, currency: "GBP", num_items: 7 }
+      ? { value: subWeekly, currency: "GBP", num_items: Number(subTier) }
       : { value: total, currency: "GBP", num_items: qtyTotal };
     if ((window as any).fbq) {
       (window as any).fbq("track", "InitiateCheckout", data, { eventID: eventId });
     }
     sendCAPIEvent("InitiateCheckout", { eventId, customData: data });
     setIcFired(true);
-  }, [mounted, icFired, isSubscription, subscriptionPlan, total, qtyTotal]);
+  }, [mounted, icFired, isSubscription, subWeekly, subTier, total, qtyTotal]);
 
   // Klaviyo "Started Checkout" — fires on arrival at checkout, so identified
   // visitors (email-list signups) who reach here but don't pay enter the
@@ -186,14 +197,13 @@ export default function Checkout() {
 
   async function startCheckout() {
     if (!valid) { setError("Please complete all required fields first."); return; }
-    if (isSubscription && !subscriptionPlan) { setError("Please choose a subscription plan."); return; }
     setSending(true); setError("");
     try {
       const customer = { name, email, phone, address: fullAddress };
-      if (isSubscription && subscriptionPlan) {
-        const draft = { kind:"subscription", plan:subscriptionPlan, customer, note, first_delivery_iso:firstISO, first_delivery_text:firstText, delivery_window:"18:30–20:00", savedAt:Date.now(), provider:"stripe_sub" };
+      if (isSubscription) {
+        const draft = { kind:"subscription", plan:{ key: subPlan, tier: subTier, weekly: subWeekly }, customer, note, first_delivery_iso:firstISO, first_delivery_text:firstText, delivery_window:"18:30–20:00", savedAt:Date.now(), provider:"stripe_sub" };
         sessionStorage.setItem("yoy_checkout_draft", JSON.stringify(draft));
-        const res = await fetch("/api/stripe/create-subscription-session", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ planKey: subscriptionPlan.key, customer, note }) });
+        const res = await fetch("/api/stripe/create-subscription-session", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ planKey: subPlan, tier: subTier, customer, note }) });
         const text = await res.text(); let data:any={}; try{data=JSON.parse(text);}catch{}
         if (!res.ok) { setError(data?.error || "Subscription checkout failed (server error)."); return; }
         if (data?.url) window.location.href = data.url; else setError("Stripe subscription checkout failed.");
@@ -227,10 +237,19 @@ export default function Checkout() {
         {isSubscription ? "Subscribe" : "Checkout"}
       </h1>
 
-      {isSubscription && subscriptionPlan ? (
+      {isSubscription ? (
         <div className="mt-3 ml-3 text-sm text-slate-700">
           <p>
-            You're subscribing to <span className="font-semibold">{subscriptionPlan.label}</span>, 7 bottles every week at a 10% discount. The weekly delivery charge is <span className="font-semibold">£4.95</span>.
+            You're subscribing to <span className="font-semibold">{subTier} bottles</span> of{" "}
+            <span className="font-semibold">{FLAVOUR_NAMES[subPlan] || subPlan}</span>
+            {subPlan === "MIX" && <> ({MIX_CONTENTS[subTier]})</>}, every week, at{" "}
+            <span className="font-semibold">{subP.discount}% off</span>.
+          </p>
+          <p className="mt-3">
+            <span className="font-semibold">{gbp(subWeekly)} per week</span>
+            {subP.delivery === 0
+              ? <> — including free chilled next-day delivery.</>
+              : <> — including {gbp(subP.delivery)} chilled next-day delivery.</>}
           </p>
           <p className="mt-3">
             First dispatch: <span className="font-semibold">{firstText}</span>, then every following Monday.
@@ -273,9 +292,10 @@ export default function Checkout() {
           <div className="space-y-1">{lines.map((l,i)=>(<div key={i}>• {l}</div>))}</div>
           <div className="mt-3 pt-3 border-t border-slate-200 space-y-1">
             <div className="flex justify-between"><span>Bottles</span><span>{qtyTotal}</span></div>
-            {deliveryFee > 0 && <div className="flex justify-between"><span>Delivery</span><span>{gbp(deliveryFee)}</span></div>}
+            <div className="flex justify-between"><span>Subtotal</span><span>{gbp(merchTotal)}</span></div>
+            {savings > 0 && <div className="flex justify-between text-emerald-600"><span>7 for 6 ({freeTotal} free)</span><span>−{gbp(savings)}</span></div>}
+            <div className="flex justify-between"><span>Delivery</span><span>{qtyTotal >= 10 ? "FREE" : gbp(deliveryFee)}</span></div>
             {totalsWithGift.discount > 0 && <div className="flex justify-between text-emerald-600"><span>{normalizedGiftCode} (10% off)</span><span>−{gbp(totalsWithGift.discount)}</span></div>}
-            {savings > 0 && <div className="flex justify-between text-emerald-600"><span>Bundle saving</span><span>−{gbp(savings)}</span></div>}
             <div className="flex justify-between font-bold text-slate-900 text-base pt-1"><span>Total due</span><span>{gbp(total)}</span></div>
           </div>
         </div>

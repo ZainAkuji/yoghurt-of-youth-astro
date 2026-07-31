@@ -12,20 +12,27 @@ const PRODUCTS = [
   { id: "MNG", name: "MNG", price: 2.9, size: "250 mL" },
 ];
 
+const DELIVERY = (n: number) => (n <= 0 ? 0 : n <= 4 ? 3.5 : n <= 9 ? 4.95 : 0);
+
 function computeTotals(cart: Record<string, number>) {
   const items = Object.entries(cart).map(([id, qty]) => {
     const p = PRODUCTS.find((x) => x.id === id); return p ? { ...p, qty } : null;
   }).filter(Boolean) as Array<(typeof PRODUCTS)[number] & { qty: number }>;
-  const qtyTotal = items.reduce((s, i) => s + i.qty, 0);
-  const plainQty = items.filter(i => i.id === "PLN").reduce((s,i)=>s+i.qty,0);
-  const flavQty = items.filter(i => i.id !== "PLN").reduce((s,i)=>s+i.qty,0);
-  const plainUnit = 2.8, flavUnit = 2.9;
-  const plainBundles = Math.floor(plainQty/7), plainRemainder = plainQty%7;
-  const flavBundles = Math.floor(flavQty/7), flavRemainder = flavQty%7;
-  const merchTotal = (plainBundles*6+plainRemainder)*plainUnit + (flavBundles*6+flavRemainder)*flavUnit;
-  const fullPrice = plainQty*plainUnit + flavQty*flavUnit;
-  const savings = Math.max(0, fullPrice - merchTotal);
-  return { items, qtyTotal, merchTotal, savings, plainBundles, flavBundles, plainRemainder, flavRemainder };
+
+  const plainQty = items.filter(i => i.id === "PLN").reduce((s, i) => s + i.qty, 0);
+  const flavQty  = items.filter(i => i.id !== "PLN").reduce((s, i) => s + i.qty, 0);
+  const qtyTotal = plainQty + flavQty;
+
+  const freeTotal = Math.floor(qtyTotal / 7);
+  const freePlain = Math.min(freeTotal, plainQty);
+  const freeFlav  = freeTotal - freePlain;
+
+  const merchTotal = (plainQty - freePlain) * 2.8 + (flavQty - freeFlav) * 2.9;
+  const fullPrice  = plainQty * 2.8 + flavQty * 2.9;
+  const savings    = Math.max(0, fullPrice - merchTotal);
+  const deliveryFee = DELIVERY(qtyTotal);
+
+  return { items, qtyTotal, merchTotal, savings, deliveryFee, total: merchTotal + deliveryFee, freeTotal };
 }
 
 const FLAVOUR_STYLE: Record<string, { bg: string; emoji: string }> = {
@@ -60,7 +67,7 @@ export default function CartDrawer() {
 
   const cart: Record<string, number> = {};
   for (const [k, v] of Object.entries($cart)) cart[k] = Number(v || 0);
-  const { items, qtyTotal, merchTotal, savings, plainBundles, flavBundles, plainRemainder, flavRemainder } = computeTotals(cart);
+  const { items, qtyTotal, merchTotal, savings, deliveryFee, total, freeTotal } = computeTotals(cart);
 
   function pay() {
     window.location.href = "/checkout";
@@ -95,15 +102,16 @@ export default function CartDrawer() {
             ))}
             <div className="border-t border-white/20 pt-4 space-y-2 text-sm text-white/80">
               <div className="flex justify-between"><span>Bottles</span><span>{qtyTotal}</span></div>
-              {plainRemainder > 0 && <div className="flex justify-between"><span>PLN</span><span>{plainRemainder} × £2.80</span></div>}
-              {plainBundles > 0 && <div className="flex justify-between"><span>Free PLN (7 for 6)</span><span>{plainBundles}</span></div>}
-              {flavRemainder > 0 && <div className="flex justify-between"><span>Flavoured</span><span>{flavRemainder} × £2.90</span></div>}
-              {flavBundles > 0 && <div className="flex justify-between"><span>Free flavoured (7 for 6)</span><span>{flavBundles}</span></div>}
-              {savings > 0 && <div className="flex justify-between text-emerald-400"><span>You save</span><span>−{gbp(savings)}</span></div>}
-              <div className="flex justify-between font-semibold text-white"><span>Total due to be paid</span><span>{gbp(merchTotal)}</span></div>
+              <div className="flex justify-between"><span>Subtotal</span><span>{gbp(merchTotal)}</span></div>
+              {freeTotal > 0 && <div className="flex justify-between text-emerald-400"><span>7 for 6 ({freeTotal} free)</span><span>−{gbp(savings)}</span></div>}
+              <div className="flex justify-between"><span>Delivery</span><span>{qtyTotal >= 10 ? "FREE" : gbp(deliveryFee)}</span></div>
+              {qtyTotal > 0 && qtyTotal < 3 && (
+                <div className="text-amber-300 text-xs pt-1">Minimum order is 3 bottles</div>
+              )}
+              <div className="flex justify-between font-semibold text-white pt-1"><span>Total</span><span>{gbp(total)}</span></div>
             </div>
             <div className="flex gap-2">
-              <button onClick={pay} disabled={qtyTotal === 0} className={cn("flex-1 rounded-2xl px-5 py-3 text-sm font-semibold transition", qtyTotal ? "bg-white text-slate-900 hover:bg-amber-300" : "bg-white/10 text-white/40 cursor-not-allowed")}>Pay</button>
+              <button onClick={pay} disabled={qtyTotal < 3} className={cn("flex-1 rounded-2xl px-5 py-3 text-sm font-semibold transition", qtyTotal >= 3 ? "bg-white text-slate-900 hover:bg-amber-300" : "bg-white/10 text-white/40 cursor-not-allowed")}>Pay</button>
               <button onClick={() => storeClear()} className="rounded-2xl border border-white/30 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition">Clear</button>
             </div>
           </div>

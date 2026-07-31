@@ -1,10 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useStore } from "@nanostores/react";
 import {
-  cart as cartStore,
-  setQty as storeSetQty,
   addQty as storeAddQty,
-  clearCart as storeClear,
   drawerOpen as drawerOpenStore,
 } from "../stores/cart";
 import { sendCAPIEvent, newEventId } from "../capi";
@@ -14,67 +11,30 @@ const gbp = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
 const cn = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(" ");
 
-const PRODUCTS = [
-  { id: "PLN", name: "PLN", price: 2.8, size: "250 mL", img: "/plain.webp" },
-  { id: "BFC", name: "BFC", price: 2.9, size: "250 mL", img: "/bfc.webp" },
-  { id: "STR", name: "STR", price: 2.9, size: "250 mL", img: "/str.webp" },
-  { id: "MNG", name: "MNG", price: 2.9, size: "250 mL", img: "/mng.webp" },
-];
+// ---------- One-off pricing (stepper) ----------
+function deliveryForQty(n: number) {
+  if (n <= 0) return 0;
+  if (n <= 4) return 3.5;
+  if (n <= 9) return 4.95;
+  return 0;
+}
 
-// ===================== TOTALS =====================
-function computeTotals(
-  cart: Record<string, number>,
-  discountPercent: number = 0,
-  giftStrQty: number = 0
-) {
-  const items = Object.entries(cart)
-    .map(([id, qty]) => {
-      const product = PRODUCTS.find((p) => p.id === id);
-      if (!product) return null;
-      return { ...product, qty };
-    })
-    .filter(Boolean) as Array<(typeof PRODUCTS)[number] & { qty: number }>;
+// 7-for-6 across the whole basket; free bottles are the cheapest present.
+function computeStepper(q: Record<string, number>) {
+  const plainQty = q.PLN || 0;
+  const flavQty = (q.BFC || 0) + (q.STR || 0) + (q.MNG || 0);
+  const bottles = plainQty + flavQty;
 
-  const qtyTotal = items.reduce((s, i) => s + i.qty, 0) + (giftStrQty || 0);
+  const freeTotal = Math.floor(bottles / 7);
+  const freePlain = Math.min(freeTotal, plainQty);
+  const freeFlav = freeTotal - freePlain;
 
-  const plainItems = items.filter((i) => i.id === "PLN");
-  const flavItems = items.filter((i) => i.id !== "PLN");
+  const merch = (plainQty - freePlain) * 2.8 + (flavQty - freeFlav) * 2.9;
+  const fullPrice = plainQty * 2.8 + flavQty * 2.9;
+  const savings = Math.max(0, fullPrice - merch);
+  const delivery = deliveryForQty(bottles);
 
-  const plainQty = plainItems.reduce((s, i) => s + i.qty, 0);
-  const flavQty = flavItems.reduce((s, i) => s + i.qty, 0);
-
-  const plainUnit = plainItems[0]?.price ?? 2.8;
-  const flavUnit = flavItems[0]?.price ?? 2.9;
-
-  const plainSubtotalRaw = plainQty * plainUnit;
-  const flavSubtotalRaw = flavQty * flavUnit;
-
-  const plainBundles = Math.floor(plainQty / 7);
-  const plainRemainder = plainQty % 7;
-  const plainBundleTotal = plainBundles * 6 * plainUnit + plainRemainder * plainUnit;
-
-  const flavBundles = Math.floor(flavQty / 7);
-  const flavRemainder = flavQty % 7;
-  const flavBundleTotal = flavBundles * 6 * flavUnit + flavRemainder * flavUnit;
-
-  const merchTotal = plainBundleTotal + flavBundleTotal;
-  const fullPrice = plainSubtotalRaw + flavSubtotalRaw;
-  const savings = Math.max(0, fullPrice - merchTotal);
-
-  const deliveryFee = merchTotal === 0 ? 0 : 4.95;
-
-  const discount = discountPercent > 0 ? Math.round(merchTotal * discountPercent) / 100 : 0;
-  const total = merchTotal - discount + deliveryFee;
-
-  const bundles = plainBundles + flavBundles;
-  const remainder = plainRemainder + flavRemainder;
-
-  return {
-    items, qtyTotal, bundles, remainder,
-    total, savings, plainSubtotal: fullPrice, merchTotal, deliveryFee,
-    plainQty, flavQty, plainBundles, flavBundles, plainRemainder, flavRemainder,
-    discount, discountPercent, giftStrQty,
-  };
+  return { bottles, merch, savings, delivery, total: merch + delivery, freeTotal };
 }
 
 // ===================== WEEK ROTATION (date-anchored) =====================
@@ -163,96 +123,17 @@ function nextEligibleMondayISO(): string {
 
 // ===================== MAIN SHOP ISLAND =====================
 export default function Shop() {
-  const $cart = useStore(cartStore);
-  const cart = useMemo(() => {
-    const m: Record<string, number> = {};
-    for (const [k, v] of Object.entries($cart)) m[k] = Number(v || 0);
-    return m;
-  }, [$cart]);
-
   const [nutritionModal, setNutritionModal] = useState<null | { title: string; src: string }>(null);
 
   // ----- New two-column selection state -----
-  const [buyMode, setBuyMode] = useState<"oneoff" | "subscribe">("subscribe");
-  const [selectedFlavour, setSelectedFlavour] = useState<string>("PLN");
-  const [unitQty, setUnitQty] = useState<number>(1);
-  const [nutritionOpen, setNutritionOpen] = useState(false);
-  const [flavourArrowUp, setFlavourArrowUp] = useState(false);
+  const [buyMode, setBuyMode] = useState<"oneoff" | "subscribe">("oneoff");
+  const [stepper, setStepper] = useState<Record<string, number>>({ PLN: 0, BFC: 0, STR: 0, MNG: 0 });
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
-
-  // Live total for the current selection (flavour × unitQty), using real bundle math
-  const selectionTotal = useMemo(() => {
-    const units = Math.max(1, unitQty);
-    const tempCart: Record<string, number> = {};
-    for (let u = 0; u < units; u++) {
-      if (selectedFlavour === "TASTER") { tempCart.PLN = (tempCart.PLN||0)+1; tempCart.BFC = (tempCart.BFC||0)+1; tempCart.STR = (tempCart.STR||0)+1; tempCart.MNG = (tempCart.MNG||0)+1; }
-      else if (selectedFlavour === "MIX") { tempCart.BFC = (tempCart.BFC||0)+2; tempCart.STR = (tempCart.STR||0)+3; tempCart.MNG = (tempCart.MNG||0)+2; }
-      else { tempCart[selectedFlavour] = (tempCart[selectedFlavour]||0)+7; }
-    }
-    return computeTotals(tempCart).merchTotal;
-  }, [selectedFlavour, unitQty]);
-
-  // Per-batch price lookup (fixed per-batch, changes with flavour + mode)
-  const BATCH_PRICE: Record<string, { oneoff: string; subscribe: string | null; bottles: string }> = {
-    TASTER: { oneoff: "£11.50", subscribe: null, bottles: "4 × 250ml" },
-    PLN: { oneoff: "£16.80", subscribe: "£15.12", bottles: "7 × 250ml" },
-    STR: { oneoff: "£17.40", subscribe: "£15.66", bottles: "7 × 250ml" },
-    BFC: { oneoff: "£17.40", subscribe: "£15.66", bottles: "7 × 250ml" },
-    MNG: { oneoff: "£17.40", subscribe: "£15.66", bottles: "7 × 250ml" },
-    MIX: { oneoff: "£17.40", subscribe: "£15.66", bottles: "7 × 250ml" },
-  };
-
-  // Flavour options — Taster excluded in subscribe mode
-  const FLAVOUR_OPTIONS = [
-    { id: "TASTER", label: "Taster — 1 PLN, 1 BFC, 1 STR, 1 MNG" },
-    { id: "PLN", label: "PLN — Plain" },
-    { id: "STR", label: "STR — Strawberry" },
-    { id: "BFC", label: "BFC — Black Forest Chocolate" },
-    { id: "MNG", label: "MNG — Mango" },
-    { id: "MIX", label: "MIX — 2 BFC, 3 STR, 2 MNG" },
-  ];
-
-  // If switching to subscribe while Taster selected, fall back to PLN
-  useEffect(() => {
-    if (buyMode === "subscribe" && selectedFlavour === "TASTER") setSelectedFlavour("PLN");
-  }, [buyMode, selectedFlavour]);
-
-  // Add the current selection (flavour × unitQty units) to the cart
-  function addSelectionToCart() {
-    const units = Math.max(1, unitQty);
-    for (let u = 0; u < units; u++) {
-      if (selectedFlavour === "TASTER") {
-        storeAddQty("PLN", 1); storeAddQty("BFC", 1); storeAddQty("STR", 1); storeAddQty("MNG", 1);
-      } else if (selectedFlavour === "MIX") {
-        storeAddQty("BFC", 2); storeAddQty("STR", 3); storeAddQty("MNG", 2);
-      } else {
-        storeAddQty(selectedFlavour, 7);
-      }
-    }
-    const priceStr = BATCH_PRICE[selectedFlavour]?.oneoff || "£0";
-    const priceNum = Number(priceStr.replace("£", "")) * units;
-    const bottleCount = (selectedFlavour === "TASTER" ? 4 : 7) * units;
-    trackAddToCart(selectedFlavour, priceNum, bottleCount);
-  }
-
-  // Buy now (one-off): add selection then go to checkout page
-  function buyNow() {
-    if (buyMode === "subscribe") { subscribeNow(); return; }
-    addSelectionToCart();
-    window.location.href = "/checkout";
-  }
 
   // Subscribe: go to checkout page in subscription mode for the selected flavour
   function subscribeNow() {
-    window.location.href = "/checkout?mode=subscription&plan=" + selectedFlavour;
+    window.location.href = `/checkout?mode=subscription&plan=${subFlavour}&tier=${subTier}`;
   }
-
-  useEffect(() => {
-    if (!nutritionOpen) return;
-    const close = () => setNutritionOpen(false);
-    window.addEventListener("click", close);
-    return () => window.removeEventListener("click", close);
-  }, [nutritionOpen]);
 
   function trackAddToCart(contentName: string, value: number, numItems: number) {
     const eventId = newEventId();
@@ -267,6 +148,56 @@ export default function Shop() {
   const _thisMonday = mondayForMode(buyMode);
   const nextWeekBrand = strainForMonday(new Date(_thisMonday.getTime() + 7 * 86400000));
   const weekAfterBrand = strainForMonday(new Date(_thisMonday.getTime() + 14 * 86400000));
+
+  // ----- Subscription state -----
+  const [subTier, setSubTier] = useState<4 | 7 | 14>(7);
+  const [subFlavour, setSubFlavour] = useState<string>("PLN");
+
+  const SUB_PRICING: Record<number, { discount: number; delivery: number; plnWas: number; plnNow: number; flavWas: number; flavNow: number }> = {
+    4:  { discount: 5,  delivery: 3.5,  plnWas: 11.20, plnNow: 10.64, flavWas: 11.60, flavNow: 11.02 },
+    7:  { discount: 10, delivery: 4.95, plnWas: 16.80, plnNow: 15.12, flavWas: 17.40, flavNow: 15.66 },
+    14: { discount: 20, delivery: 0,    plnWas: 33.60, plnNow: 26.88, flavWas: 34.80, flavNow: 27.84 },
+  };
+
+  const MIX_AT: Record<number, string> = {
+    4: "1 BFC, 2 STR, 1 MNG",
+    7: "2 BFC, 3 STR, 2 MNG",
+    14: "4 BFC, 6 STR, 4 MNG",
+  };
+
+  const subP = SUB_PRICING[subTier];
+  const subIsPlain = subFlavour === "PLN";
+  const subNow = subIsPlain ? subP.plnNow : subP.flavNow;
+  const subWas = subIsPlain ? subP.plnWas : subP.flavWas;
+
+  const SUB_FLAVOURS = [
+    { id: "PLN", name: "Plain", cls: "bg-slate-50 border-slate-300" },
+    { id: "BFC", name: "Black Forest", cls: "bg-rose-50 border-rose-300" },
+    { id: "STR", name: "Strawberry", cls: "bg-pink-50 border-pink-300" },
+    { id: "MNG", name: "Mango", cls: "bg-amber-50 border-amber-300" },
+    { id: "MIX", name: "Mixed", cls: "bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 border-slate-300" },
+  ];
+
+  // ----- One-off stepper state -----
+  const s = computeStepper(stepper);
+  const short = Math.max(0, 3 - s.bottles);
+  const canBuy = s.bottles >= 3;
+
+  const FLAVOURS = [
+    { id: "PLN", name: "Plain", price: "£2.80", cls: "bg-slate-50 border-slate-300" },
+    { id: "BFC", name: "Black Forest", price: "£2.90", cls: "bg-rose-50 border-rose-300" },
+    { id: "STR", name: "Strawberry", price: "£2.90", cls: "bg-pink-50 border-pink-300" },
+    { id: "MNG", name: "Mango", price: "£2.90", cls: "bg-amber-50 border-amber-300" },
+  ];
+
+  const bump = (id: string, d: number) =>
+    setStepper((p) => ({ ...p, [id]: Math.max(0, (p[id] || 0) + d) }));
+
+  function addStepperToCart() {
+    for (const [id, n] of Object.entries(stepper)) if (n > 0) storeAddQty(id, n);
+    trackAddToCart("Mixed", s.merch, s.bottles);
+    setStepper({ PLN: 0, BFC: 0, STR: 0, MNG: 0 });
+  }
 
   return (
     <>
@@ -331,19 +262,25 @@ export default function Shop() {
               </div>
 
               {/* Price line above toggle */}
-              <div className="mt-6 ml-3">
+              <div className="mt-5 ml-3">
                 <div className="flex items-center gap-3 flex-wrap">
                   <span className="text-3xl font-bold text-slate-900">
-                    {buyMode === "subscribe" ? BATCH_PRICE[selectedFlavour]?.subscribe : BATCH_PRICE[selectedFlavour]?.oneoff}
+                    {buyMode === "subscribe" ? gbp(subNow) : "£2.80"}
                   </span>
                   {buyMode === "subscribe" && (
                     <>
-                      <span className="text-lg text-slate-400 line-through">{BATCH_PRICE[selectedFlavour]?.oneoff}</span>
-                      <span className="rounded-full bg-slate-900 text-white text-xs font-semibold px-3 py-1">Save 10%</span>
+                      <span className="text-lg text-slate-400 line-through">{gbp(subWas)}</span>
+                      <span className="rounded-full bg-slate-900 text-white text-xs font-semibold px-3 py-1">
+                        Save {subP.discount}%
+                      </span>
                     </>
                   )}
                 </div>
-                <p className="mt-1 text-sm text-slate-500">{selectedFlavour === "TASTER" ? "4 × 250ml bottles" : "7 × 250ml bottles"}</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  {buyMode === "subscribe"
+                    ? `${subTier} × 250ml bottles every week`
+                    : "per 250ml bottle of plain"}
+                </p>
               </div>
 
               {/* Strain description */}
@@ -357,131 +294,272 @@ export default function Shop() {
               <div className="mt-5 flex flex-col gap-3">
                 <button
                   type="button"
-                  onClick={() => setBuyMode("subscribe")}
-                  className={cn("text-left rounded-2xl border-2 px-4 py-3 transition", buyMode === "subscribe" ? "border-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-300")}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-slate-900">Subscribe &amp; Save 10%</span>
-                    <span className="text-sm font-bold text-slate-900">{BATCH_PRICE[selectedFlavour]?.subscribe ? `${BATCH_PRICE[selectedFlavour].subscribe} per week` : "—"}</span>
-                  </div>
-                  <ul className="mt-2 space-y-0.5 text-xs text-slate-600">
-                    <li>✓ 10% off every order</li>
-                    <li>✓ Dispatched fresh every week</li>
-                    <li>✓ Pause or cancel anytime via email</li>
-                    <li>✓ Automatically receive each week's strain</li>
-                  </ul>
-                </button>
-                <button
-                  type="button"
                   onClick={() => setBuyMode("oneoff")}
                   className={cn("text-left rounded-2xl border-2 px-4 py-3 transition", buyMode === "oneoff" ? "border-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-300")}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-slate-900">One-time purchase</span>
-                    <span className="text-sm font-bold text-slate-900">{BATCH_PRICE[selectedFlavour]?.oneoff} per batch</span>
+                    <span className="text-sm font-bold text-slate-900">from £2.80 per bottle</span>
                   </div>
                 </button>
-              </div>
-
-              {/* Flavour dropdown */}
-              <div className="relative mt-4">
-                <select
-                  value={selectedFlavour}
-                  onMouseDown={() => setFlavourArrowUp(true)}
-                  onBlur={() => setFlavourArrowUp(false)}
-                  onChange={(e) => { setSelectedFlavour(e.target.value); setFlavourArrowUp(false); }}
-                  className="appearance-none w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 pr-9 text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-amber-400 hover:bg-slate-50 transition"
-                >
-                  {FLAVOUR_OPTIONS.filter((f) => !(buyMode === "subscribe" && f.id === "TASTER")).map((f) => (
-                    <option key={f.id} value={f.id}>{f.label}</option>
-                  ))}
-                </select>
-                <span className={cn("pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-700 transition-transform", flavourArrowUp ? "rotate-180" : "")}>▾</span>
-              </div>
-
-              {/* Nutrition panel toggle */}
-              <div className="relative mt-4">
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); setNutritionOpen((o) => !o); }}
-                  className="flex items-center justify-between w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                  onClick={() => setBuyMode("subscribe")}
+                  className={cn("text-left rounded-2xl border-2 px-4 py-3 transition", buyMode === "subscribe" ? "border-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-300")}
                 >
-                  <span>Ingredients &amp; Nutritional Information</span>
-                  <span className={cn("text-slate-500 transition-transform", nutritionOpen ? "rotate-180" : "")}>▾</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-900">Subscribe &amp; Save</span>
+                    <span className="text-sm font-bold text-slate-900">from £10.64 per week</span>
+                  </div>
+                  <ul className="mt-2 space-y-0.5 text-xs text-slate-600">
+                    <li>✓ Discount on every order</li>
+                    <li>✓ Dispatched fresh every week</li>
+                    <li>✓ Pause, adjust or cancel anytime via email</li>
+                    <li>✓ Automatically receive each week's strain</li>
+                  </ul>
                 </button>
-                {nutritionOpen && (
-                  <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-xl border border-slate-200 bg-white shadow-lg py-1">
-                    {[
-                      { id: "PLN", label: "PLN — Plain", src: "/pln_nutrition.png" },
-                      { id: "BFC", label: "BFC — Black Forest Chocolate", src: "/bfc_nutrition.png" },
-                      { id: "STR", label: "STR — Strawberry", src: "/str_nutrition.png" },
-                      { id: "MNG", label: "MNG — Mango", src: "/mng_nutrition.png" },
-                    ].map((n) => (
-                      <button
-                        key={n.id}
-                        type="button"
-                        onClick={() => { setNutritionModal({ title: `${n.label} — Nutrition`, src: n.src }); setNutritionOpen(false); }}
-                        className="block w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-amber-600 transition"
-                      >
-                        {n.label}
-                      </button>
+              </div>
+
+              {/* ============ ONE-OFF ============ */}
+              {buyMode === "oneoff" && (
+                <>
+                  {/* Flavour pills */}
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    {FLAVOURS.map((f) => (
+                      <div key={f.id} className={cn("rounded-2xl border-2 px-3 py-3", f.cls)}>
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-sm font-bold text-slate-900">{f.id}</span>
+                          <span className="text-xs text-slate-600">{f.price}</span>
+                        </div>
+                        <p className="text-xs text-slate-600 mb-2">{f.name}</p>
+                        <div className="flex items-center justify-between">
+                          <button type="button" onClick={() => bump(f.id, -1)}
+                            className="w-8 h-8 grid place-items-center rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 transition text-lg leading-none">−</button>
+                          <span className="text-base font-bold text-slate-900 w-8 text-center">{stepper[f.id] || 0}</span>
+                          <button type="button" onClick={() => bump(f.id, 1)}
+                            className="w-8 h-8 grid place-items-center rounded-lg bg-slate-900 text-white hover:bg-slate-700 transition text-lg leading-none">+</button>
+                        </div>
+                      </div>
                     ))}
                   </div>
-                )}
-              </div>
 
-              {/* Quantity stepper (one-time only) */}
-              {buyMode === "oneoff" && (
-                <div className="mt-3 ml-3 flex items-center gap-3">
-                  <span className="text-sm font-medium text-slate-700">Quantity</span>
-                  <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => setUnitQty((q) => Math.max(1, q - 1))} className="w-9 h-9 grid place-items-center rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 transition text-lg leading-none">−</button>
-                    <span className="w-8 text-center text-sm font-semibold">{unitQty}</span>
-                    <button type="button" onClick={() => setUnitQty((q) => q + 1)} className="w-9 h-9 grid place-items-center rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 transition text-lg leading-none">+</button>
+                  {/* 7-for-6 hook */}
+                  <div className="mt-3 ml-3 flex items-stretch justify-between gap-3">
+                    <div>
+                      <p className="text-sm text-slate-600">Minimum order of 3 bottles</p>
+                      <p className="mt-0.5 text-sm font-semibold text-slate-900">
+                        Buy 7 for the price of 6
+                        {s.freeTotal > 0 && (
+                          <span className="text-emerald-600"> · {s.freeTotal} free bottle{s.freeTotal > 1 ? "s" : ""} applied</span>
+                        )}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStepper({ PLN: 0, BFC: 0, STR: 0, MNG: 0 })}
+                      className="shrink-0 rounded-xl border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+                    >
+                      Clear all
+                    </button>
                   </div>
-                </div>
+
+                  {/* Delivery tier pills */}
+                  <p className="mt-5 ml-3 text-sm text-slate-900">Chilled next-day delivery charge:</p>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {[
+                      { label: "3–4 bottles", value: "£3.50", active: s.bottles >= 3 && s.bottles <= 4 },
+                      { label: "5–9 bottles", value: "£4.95", active: s.bottles >= 5 && s.bottles <= 9 },
+                      { label: "10+ bottles", value: "FREE", active: s.bottles >= 10 },
+                    ].map((d) => (
+                      <div key={d.label}
+                        className={cn("rounded-xl border-2 px-2 py-2 text-center transition",
+                          d.active ? "border-slate-900 bg-slate-50" : "border-slate-200 opacity-60")}>
+                        <p className="text-[11px] text-slate-600">{d.label}</p>
+                        <p className={cn("text-sm font-bold", d.value === "FREE" ? "text-emerald-600" : "text-slate-900")}>{d.value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Nutrition link */}
+                  <button type="button"
+                    onClick={() => setNutritionModal({ title: "Nutrition & Ingredients", src: "/nutrition.png" })}
+                    className="mt-3 ml-3 self-start text-xs text-slate-600 underline hover:text-amber-500 transition">
+                    Nutrition and ingredients information
+                  </button>
+
+                  {/* Running total */}
+                  <div className="mt-5 rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm">
+                    <div className="flex justify-between text-slate-700">
+                      <span>{s.bottles} bottle{s.bottles === 1 ? "" : "s"}</span><span>{gbp(s.merch)}</span>
+                    </div>
+                    {s.savings > 0 && (
+                      <div className="flex justify-between text-emerald-600"><span>7 for 6 saving</span><span>−{gbp(s.savings)}</span></div>
+                    )}
+                    <div className="flex justify-between text-slate-700">
+                      <span>Delivery</span><span>{s.bottles >= 10 ? "FREE" : gbp(s.delivery)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-slate-900 text-base mt-1 pt-2 border-t border-slate-200">
+                      <span>Total</span><span>{gbp(s.total)}</span>
+                    </div>
+                  </div>
+
+                  {/* Dispatch date */}
+                  <p className="mt-3 ml-3 text-sm text-slate-600">
+                    Dispatch date: <strong>{formatDateUK(nextDispatchISO())} {weekdayFromISO(nextDispatchISO())}</strong>
+                  </p>
+
+                  {/* Buy buttons */}
+                  <div className="mt-4 flex flex-col gap-3">
+                    {!canBuy && (
+                      <p className="text-center text-sm font-semibold text-amber-600">
+                        {s.bottles === 0 ? "Add at least 3 bottles to continue" : `Add ${short} more bottle${short > 1 ? "s" : ""} to continue`}
+                      </p>
+                    )}
+                    <button type="button" disabled={!canBuy}
+                      onClick={() => { addStepperToCart(); drawerOpenStore.set(true); }}
+                      className={cn("w-full rounded-2xl px-6 py-3.5 text-sm font-bold transition flex items-center justify-center gap-2",
+                        canBuy ? "bg-slate-900 text-white hover:bg-slate-700" : "bg-slate-100 text-slate-400 cursor-not-allowed")}>
+                      <span>Add to basket</span>
+                      {canBuy && <><span className="opacity-50">·</span><span>{gbp(s.total)}</span></>}
+                    </button>
+                    <button type="button" disabled={!canBuy}
+                      onClick={() => { addStepperToCart(); window.location.href = "/checkout"; }}
+                      className={cn("w-full rounded-2xl px-6 py-3.5 text-sm font-bold transition",
+                        canBuy ? "bg-amber-400 text-slate-900 hover:bg-amber-300" : "bg-slate-100 text-slate-400 cursor-not-allowed")}>
+                      Pay now
+                    </button>
+                  </div>
+                </>
               )}
 
-              {/* Delivery line: dispatch date + charge */}
-              <p className="mt-4 ml-3 text-sm text-slate-600">
-                Dispatch date: <strong>{buyMode === "subscribe" ? `${formatDateUK(nextEligibleMondayISO())} Monday` : `${formatDateUK(nextDispatchISO())} ${weekdayFromISO(nextDispatchISO())}`}</strong>
-                <span className="mx-2 text-slate-300">·</span>
-                Chilled next-day delivery <strong>£4.95</strong>
-              </p>
+              {/* ============ SUBSCRIBE ============ */}
+              {buyMode === "subscribe" && (
+                <>
+                  {/* Tier pills */}
+                  <p className="mt-5 ml-3 text-sm font-semibold text-slate-900">Bottles per week</p>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {[4, 7, 14].map((t) => {
+                      const p = SUB_PRICING[t];
+                      const active = subTier === t;
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setSubTier(t as 4 | 7 | 14)}
+                          className={cn(
+                            "rounded-xl border-2 px-2 py-3 text-center transition",
+                            active ? "border-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-300"
+                          )}
+                        >
+                          <p className="text-base font-bold text-slate-900">{t}</p>
+                          <p className="text-[11px] text-slate-600">bottles</p>
+                          <p className="mt-1 text-xs font-semibold text-emerald-600">Save {p.discount}%</p>
+                        </button>
+                      );
+                    })}
+                  </div>
 
-              {/* Buy buttons */}
-              <div className="mt-5 flex flex-col gap-3">
-                {buyMode === "subscribe" ? (
+                  {/* Flavour pills */}
+                  <p className="mt-5 ml-3 text-sm font-semibold text-slate-900">Flavour</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {SUB_FLAVOURS.map((f, i) => {
+                      const active = subFlavour === f.id;
+                      const isPln = f.id === "PLN";
+                      const now = isPln ? subP.plnNow : subP.flavNow;
+                      const was = isPln ? subP.plnWas : subP.flavWas;
+                      const isMix = f.id === "MIX";
+                      return (
+                        <button
+                          key={f.id}
+                          type="button"
+                          onClick={() => setSubFlavour(f.id)}
+                          className={cn(
+                            "rounded-2xl border-2 px-3 py-2.5 text-left transition",
+                            isMix && i === SUB_FLAVOURS.length - 1 ? "col-span-2" : "",
+                            active ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300",
+                            f.cls
+                          )}
+                        >
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="text-sm font-bold text-slate-900">{f.id}</span>
+                            <span className="text-sm font-bold text-slate-900">{gbp(now)}</span>
+                          </div>
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="text-xs text-slate-600">{isMix ? MIX_AT[subTier] : f.name}</span>
+                            <span className="text-xs text-slate-400 line-through">{gbp(was)}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Delivery pills */}
+                  <p className="mt-5 ml-3 text-sm font-semibold text-slate-900">Chilled next-day delivery charge</p>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {[
+                      { tier: 4, value: "£3.50" },
+                      { tier: 7, value: "£4.95" },
+                      { tier: 14, value: "FREE" },
+                    ].map((d) => (
+                      <div
+                        key={d.tier}
+                        className={cn(
+                          "rounded-xl border-2 px-2 py-2 text-center transition",
+                          subTier === d.tier ? "border-slate-900 bg-slate-50" : "border-slate-200 opacity-60"
+                        )}
+                      >
+                        <p className="text-[11px] text-slate-600">{d.tier} bottles</p>
+                        <p className={cn("text-sm font-bold", d.value === "FREE" ? "text-emerald-600" : "text-slate-900")}>
+                          {d.value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Nutrition link */}
                   <button
                     type="button"
-                    onClick={subscribeNow}
-                    className="w-full rounded-2xl bg-slate-900 text-white px-6 py-3.5 text-sm font-bold hover:bg-slate-700 transition flex items-center justify-center gap-2"
+                    onClick={() => setNutritionModal({ title: "Nutrition & Ingredients", src: "/nutrition.png" })}
+                    className="mt-3 ml-3 self-start text-xs text-slate-600 underline hover:text-amber-500 transition"
                   >
-                    <span>Subscribe</span>
-                    <span className="opacity-50">·</span>
-                    <span>{BATCH_PRICE[selectedFlavour]?.subscribe} per week</span>
+                    Nutrition and ingredients information
                   </button>
-                ) : (
-                  <>
+
+                  {/* Running total */}
+                  <div className="mt-5 rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm">
+                    <div className="flex justify-between text-slate-700">
+                      <span>{subTier} bottles · {subFlavour}</span><span>{gbp(subNow)}</span>
+                    </div>
+                    <div className="flex justify-between text-emerald-600">
+                      <span>Subscriber saving ({subP.discount}%)</span><span>−{gbp(subWas - subNow)}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-700">
+                      <span>Delivery</span><span>{subP.delivery === 0 ? "FREE" : gbp(subP.delivery)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-slate-900 text-base mt-1 pt-2 border-t border-slate-200">
+                      <span>Per week</span><span>{gbp(subNow + subP.delivery)}</span>
+                    </div>
+                  </div>
+
+                  {/* Dispatch */}
+                  <p className="mt-3 ml-3 text-sm text-slate-600">
+                    First dispatch: <strong>{formatDateUK(nextEligibleMondayISO())} Monday</strong>, then every Monday
+                  </p>
+
+                  {/* Subscribe button */}
+                  <div className="mt-4">
                     <button
                       type="button"
-                      onClick={() => { addSelectionToCart(); drawerOpenStore.set(true); }}
+                      onClick={subscribeNow}
                       className="w-full rounded-2xl bg-slate-900 text-white px-6 py-3.5 text-sm font-bold hover:bg-slate-700 transition flex items-center justify-center gap-2"
                     >
-                      <span>Add to basket</span>
+                      <span>Subscribe</span>
                       <span className="opacity-50">·</span>
-                      <span>{gbp(selectionTotal)}</span>
+                      <span>{gbp(subNow + subP.delivery)} per week</span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={buyNow}
-                      className="w-full rounded-2xl bg-amber-400 text-slate-900 px-6 py-3.5 text-sm font-bold hover:bg-amber-300 transition"
-                    >
-                      Buy now
-                    </button>
-                  </>
-                )}
-              </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -509,8 +587,8 @@ export default function Shop() {
                   body: (
                     <>
                       <p>Choose from <strong>PLN</strong> (plain), <strong>BFC</strong> (black forest chocolate), <strong>STR</strong> (strawberry), and <strong>MNG</strong> (mango).</p>
-                      <p className="mt-2">Each batch is <strong>7 bottles</strong> of your chosen flavour. <strong>MIX</strong> gives you 2 BFC, 3 STR, and 2 MNG. <strong>Taster</strong> is 1 of each flavour (4 bottles).</p>
-                      <p className="mt-2">Buy 7 and pay for 6, the bundle saving is applied automatically in your basket.</p>
+                      <p className="mt-2">Order any quantity from <strong>3 bottles</strong> upwards, mixing flavours however you like.</p>
+                      <p className="mt-2">Buy any 7 bottles for the price of 6, applied automatically across your whole basket.</p>
                     </>
                   ),
                 },
@@ -519,7 +597,7 @@ export default function Shop() {
                   title: "Delivery & dispatch",
                   body: (
                     <>
-                      <p>Chilled next-day delivery across the UK for <strong>£4.95</strong>, sent in insulated, chilled packaging so it arrives cold and fresh.</p>
+                      <p>Chilled next-day delivery: <strong>£3.50</strong> on 3–4 bottles, <strong>£4.95</strong> on 5–9, and <strong>free</strong> on 10 or more.</p>
                       <p className="mt-2">We ferment the day before dispatch and send orders on <strong>Mondays</strong> and <strong>Thursdays</strong> via next-day delivery.</p>
                     </>
                   ),
@@ -529,9 +607,9 @@ export default function Shop() {
                   title: "Weekly subscription",
                   body: (
                     <>
-                      <p>Subscribe to receive <strong>7 bottles every week</strong> at a <strong>10% discount</strong>, fermented fresh before each dispatch.</p>
+                      <p>Subscribe to <strong>4, 7 or 14 bottles</strong> every week and save <strong>5%, 10% or 20%</strong>, fermented fresh before each dispatch.</p>
                       <p className="mt-2">Your first batch arrives the coming available <strong>Monday</strong>, then every following Monday. You'll automatically receive each week's rotating strain.</p>
-                      <p className="mt-2">Pause or cancel anytime by emailing <a href="mailto:support@yoghurtofyouth.co.uk" className="underline hover:text-amber-500 transition">support@yoghurtofyouth.co.uk</a>.</p>
+                      <p className="mt-2">Pause, adjust or cancel anytime by emailing <a href="mailto:support@yoghurtofyouth.co.uk" className="underline hover:text-amber-500 transition">support@yoghurtofyouth.co.uk</a>.</p>
                     </>
                   ),
                 },
