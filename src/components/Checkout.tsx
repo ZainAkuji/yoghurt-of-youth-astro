@@ -268,7 +268,9 @@ export default function Checkout() {
 
       <div className="mt-6">
         <input value={note} onChange={(e)=>setNote(e.target.value)} placeholder="Order note (optional)" className={inputCls} />
-        <p className="mt-2 ml-3 text-xs text-slate-500">Have a one-time discount code? Apply it at the secure checkout on the next step.</p>
+        {!isSubscription && (
+          <p className="mt-2 ml-3 text-xs text-slate-500">Have a one-time discount code? Apply it at the secure checkout on the next step.</p>
+        )}
       </div>
 
       {/*{!isSubscription && (

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useStore } from "@nanostores/react";
-import { cart as cartStore, clearCart as storeClear, drawerOpen as drawerOpenStore } from "../stores/cart";
+import { cart as cartStore, clearCart as storeClear, addQty as storeAddQty, drawerOpen as drawerOpenStore } from "../stores/cart";
 
 const gbp = (n: number) => new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
 const cn = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(" ");
@@ -96,7 +96,13 @@ export default function CartDrawer() {
                     <div><div className="font-medium text-white">{i.name}</div><div className="text-white/60">{i.size}</div></div>
                     <div className="font-medium text-white/90">£{(i.qty * i.price).toFixed(2)}</div>
                   </div>
-                  <div className="mt-2 flex items-center gap-2"><span className="w-8 text-sm">{i.qty}</span></div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <button type="button" onClick={() => storeAddQty(i.id, -1)}
+                      className="w-7 h-7 grid place-items-center rounded-lg bg-white/10 border border-white/20 text-white hover:bg-white/20 transition text-sm leading-none">−</button>
+                    <span className="w-6 text-center text-sm font-semibold">{i.qty}</span>
+                    <button type="button" onClick={() => storeAddQty(i.id, 1)}
+                      className="w-7 h-7 grid place-items-center rounded-lg bg-white text-slate-900 hover:bg-slate-200 transition text-sm leading-none">+</button>
+                  </div>
                 </div>
               </div>
             ))}
