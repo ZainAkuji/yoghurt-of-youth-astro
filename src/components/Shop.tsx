@@ -248,7 +248,7 @@ export default function Shop() {
               {/* Review line + benefits */}
               <div className="mt-3 ml-3">
                 <p className="text-sm text-slate-600">
-                  <a href="https://g.page/r/CWkxtud6iKYlEAE/review" target="_blank" rel="noopener noreferrer" className="font-semibold text-slate-800 hover:text-amber-500 transition"><span className="text-lg">★★★★★</span> 5.0 on Google</a>
+                  <a href="https://g.page/r/CWkxtud6iKYlEAE/review" target="_blank" rel="noopener noreferrer" className="font-semibold text-slate-800 hover:text-amber-500 transition"><span className="text-lg">★★★★★</span> 4.8 on Google</a>
                   <span className="mx-2 text-slate-800">·</span>
                   100+ satisfied customers
                 </p>
