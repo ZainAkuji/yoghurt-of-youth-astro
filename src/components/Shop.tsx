@@ -290,6 +290,13 @@ export default function Shop() {
                 {thisWeekBrand === "LVLV" && (<>Yoghurt fermented by <em>L. reuteri</em> ATCC PTA 6475.<br />Studied for antipathogenic and oxytocin-stimulating properties.</>)}
               </p>
 
+              {/* Nutrition link */}
+              <button type="button"
+                onClick={() => setNutritionModal({ title: "Nutrition & Ingredients", src: "/nutrition.png" })}
+                className="ml-3 self-start text-sm text-slate-700 underline hover:text-amber-500 transition">
+                Nutrition and ingredients information
+              </button>
+
               {/* Vertical Subscribe / One-time toggle */}
               <div className="mt-5 flex flex-col gap-3">
                 <button
@@ -379,13 +386,6 @@ export default function Shop() {
                       </div>
                     ))}
                   </div>
-
-                  {/* Nutrition link */}
-                  <button type="button"
-                    onClick={() => setNutritionModal({ title: "Nutrition & Ingredients", src: "/nutrition.png" })}
-                    className="mt-3 ml-3 self-start text-xs text-slate-600 underline hover:text-amber-500 transition">
-                    Nutrition and ingredients information
-                  </button>
 
                   {/* Running total */}
                   <div className="mt-5 rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm">
