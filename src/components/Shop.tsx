@@ -175,7 +175,7 @@ export default function Shop() {
     { id: "BFC", name: "Black Forest Chocolate", cls: "bg-pink-100 border-amber-800", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
     { id: "STR", name: "Strawberry", cls: "bg-rose-100 border-rose-300", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
     { id: "MNG", name: "Mango", cls: "bg-amber-100 border-amber-300", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
-    { id: "MIX", name: "Mixed", cls: "bg-gradient-to-r from-pink-100 via-rose-100 to-amber-100 border-slate-400", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
+    { id: "MIX", name: "Mixed", cls: "bg-gradient-to-r from-pink-100 via-rose-100 to-amber-100 border-slate-300", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
   ];
 
   // ----- One-off stepper state -----
@@ -479,8 +479,8 @@ export default function Shop() {
                           className={cn(
                             "rounded-2xl border-2 px-3 py-2.5 text-left transition",
                             isMix && i === SUB_FLAVOURS.length - 1 ? "col-span-2" : "",
-                            f.cls,
-                            active ? "!border-slate-900 ring-1 ring-slate-900" : "hover:opacity-80"
+                            active ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300",
+                            f.cls
                           )}
                         >
                           <div className="flex items-baseline justify-between gap-2">
