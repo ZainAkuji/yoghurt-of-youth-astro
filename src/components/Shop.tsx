@@ -171,11 +171,11 @@ export default function Shop() {
   const subWas = subIsPlain ? subP.plnWas : subP.flavWas;
 
   const SUB_FLAVOURS = [
-    { id: "PLN", name: "Plain", cls: "bg-slate-100 border-slate-300", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
+    { id: "PLN", name: "Plain", cls: "bg-slate-100 border-slate-200", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
     { id: "BFC", name: "Black Forest Chocolate", cls: "bg-pink-100 border-amber-800", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
     { id: "STR", name: "Strawberry", cls: "bg-rose-100 border-rose-300", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
     { id: "MNG", name: "Mango", cls: "bg-amber-100 border-amber-300", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
-    { id: "MIX", name: "Mixed", cls: "bg-gradient-to-r from-pink-100 via-rose-100 to-amber-100 border-slate-300", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
+    { id: "MIX", name: "Mixed", cls: "bg-gradient-to-r from-pink-100 via-rose-100 to-amber-100 border-slate-200", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
   ];
 
   // ----- One-off stepper state -----
