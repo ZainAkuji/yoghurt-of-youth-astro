@@ -171,11 +171,11 @@ export default function Shop() {
   const subWas = subIsPlain ? subP.plnWas : subP.flavWas;
 
   const SUB_FLAVOURS = [
-    { id: "PLN", name: "Plain", cls: "bg-slate-50 border-slate-300" },
-    { id: "BFC", name: "Black Forest", cls: "bg-rose-50 border-rose-300" },
-    { id: "STR", name: "Strawberry", cls: "bg-pink-50 border-pink-300" },
-    { id: "MNG", name: "Mango", cls: "bg-amber-50 border-amber-300" },
-    { id: "MIX", name: "Mixed", cls: "bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 border-slate-300" },
+    { id: "PLN", name: "Plain", cls: "bg-slate-100 border-slate-300", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
+    { id: "BFC", name: "Black Forest Chocolate", cls: "bg-pink-100 border-amber-800", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
+    { id: "STR", name: "Strawberry", cls: "bg-rose-100 border-rose-300", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
+    { id: "MNG", name: "Mango", cls: "bg-amber-100 border-amber-300", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
+    { id: "MIX", name: "Mixed", cls: "bg-gradient-to-r from-pink-100 via-rose-100 to-amber-100 border-slate-400", txt: "text-slate-900", sub: "text-slate-600", was: "text-slate-400" },
   ];
 
   // ----- One-off stepper state -----
@@ -184,10 +184,10 @@ export default function Shop() {
   const canBuy = s.bottles >= 3;
 
   const FLAVOURS = [
-    { id: "PLN", name: "Plain", price: "£2.80", cls: "bg-slate-50 border-slate-300" },
-    { id: "BFC", name: "Black Forest", price: "£2.90", cls: "bg-rose-50 border-rose-300" },
-    { id: "STR", name: "Strawberry", price: "£2.90", cls: "bg-pink-50 border-pink-300" },
-    { id: "MNG", name: "Mango", price: "£2.90", cls: "bg-amber-50 border-amber-300" },
+    { id: "PLN", name: "Plain", price: "£2.80", cls: "bg-slate-100 border-slate-300", txt: "text-slate-900", sub: "text-slate-600" },
+    { id: "BFC", name: "Black Forest Chocolate", price: "£2.90", cls: "bg-pink-100 border-amber-800", txt: "text-slate-900", sub: "text-slate-600" },
+    { id: "STR", name: "Strawberry", price: "£2.90", cls: "bg-rose-100 border-rose-300", txt: "text-slate-900", sub: "text-slate-600" },
+    { id: "MNG", name: "Mango", price: "£2.90", cls: "bg-amber-100 border-amber-300", txt: "text-slate-900", sub: "text-slate-600" },
   ];
 
   const bump = (id: string, d: number) =>
@@ -248,7 +248,10 @@ export default function Shop() {
               {/* Review line + benefits */}
               <div className="mt-3 ml-3">
                 <p className="text-sm text-slate-600">
-                  <a href="https://g.page/r/CWkxtud6iKYlEAE/review" target="_blank" rel="noopener noreferrer" className="font-semibold text-slate-800 hover:text-amber-500 transition"><span className="text-lg">★★★★★</span> 4.8 on Google</a>
+                  <a href="https://g.page/r/CWkxtud6iKYlEAE/review" target="_blank" rel="noopener noreferrer" className="font-semibold text-slate-800 hover:text-amber-500 transition">
+                    <span className="text-lg">★★★★★</span> 4.8 on{" "}
+                    <span className="text-[#4285F4]">G</span><span className="text-[#EA4335]">o</span><span className="text-[#FBBC05]">o</span><span className="text-[#4285F4]">g</span><span className="text-[#34A853]">l</span><span className="text-[#EA4335]">e</span>
+                  </a>
                   <span className="mx-2 text-slate-800">·</span>
                   100+ satisfied customers
                 </p>
@@ -293,7 +296,7 @@ export default function Shop() {
               {/* Nutrition link */}
               <button type="button"
                 onClick={() => setNutritionModal({ title: "Nutrition & Ingredients", src: "/nutrition.png" })}
-                className="ml-3 self-start text-sm text-slate-700 underline hover:text-amber-500 transition">
+                className="mt-0.5 ml-3 self-start text-sm text-slate-700 underline hover:text-amber-500 transition">
                 Nutrition and ingredients information
               </button>
 
@@ -335,14 +338,14 @@ export default function Shop() {
                     {FLAVOURS.map((f) => (
                       <div key={f.id} className={cn("rounded-2xl border-2 px-3 py-3", f.cls)}>
                         <div className="flex items-baseline justify-between">
-                          <span className="text-sm font-bold text-slate-900">{f.id}</span>
-                          <span className="text-xs text-slate-600">{f.price}</span>
+                          <span className={cn("text-sm font-bold", f.txt)}>{f.id}</span>
+                          <span className={cn("text-xs", f.sub)}>{f.price}</span>
                         </div>
-                        <p className="text-xs text-slate-600 mb-2">{f.name}</p>
+                        <p className={cn("text-xs mb-2", f.sub)}>{f.name}</p>
                         <div className="flex items-center justify-between">
                           <button type="button" onClick={() => bump(f.id, -1)}
                             className="w-8 h-8 grid place-items-center rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 transition text-lg leading-none">−</button>
-                          <span className="text-base font-bold text-slate-900 w-8 text-center">{stepper[f.id] || 0}</span>
+                          <span className={cn("text-base font-bold w-8 text-center", f.txt)}>{stepper[f.id] || 0}</span>
                           <button type="button" onClick={() => bump(f.id, 1)}
                             className="w-8 h-8 grid place-items-center rounded-lg bg-slate-900 text-white hover:bg-slate-700 transition text-lg leading-none">+</button>
                         </div>
@@ -476,17 +479,17 @@ export default function Shop() {
                           className={cn(
                             "rounded-2xl border-2 px-3 py-2.5 text-left transition",
                             isMix && i === SUB_FLAVOURS.length - 1 ? "col-span-2" : "",
-                            active ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300",
-                            f.cls
+                            f.cls,
+                            active ? "!border-slate-900 ring-1 ring-slate-900" : "hover:opacity-80"
                           )}
                         >
                           <div className="flex items-baseline justify-between gap-2">
-                            <span className="text-sm font-bold text-slate-900">{f.id}</span>
-                            <span className="text-sm font-bold text-slate-900">{gbp(now)}</span>
+                            <span className={cn("text-sm font-bold", f.txt)}>{f.id}</span>
+                            <span className={cn("text-sm font-bold", f.txt)}>{gbp(now)}</span>
                           </div>
                           <div className="flex items-baseline justify-between gap-2">
-                            <span className="text-xs text-slate-600">{isMix ? MIX_AT[subTier] : f.name}</span>
-                            <span className="text-xs text-slate-400 line-through">{gbp(was)}</span>
+                            <span className={cn("text-xs", f.sub)}>{isMix ? MIX_AT[subTier] : f.name}</span>
+                            <span className={cn("text-xs line-through", f.was)}>{gbp(was)}</span>
                           </div>
                         </button>
                       );
@@ -515,15 +518,6 @@ export default function Shop() {
                       </div>
                     ))}
                   </div>
-
-                  {/* Nutrition link */}
-                  <button
-                    type="button"
-                    onClick={() => setNutritionModal({ title: "Nutrition & Ingredients", src: "/nutrition.png" })}
-                    className="mt-3 ml-3 self-start text-xs text-slate-600 underline hover:text-amber-500 transition"
-                  >
-                    Nutrition and ingredients information
-                  </button>
 
                   {/* Running total */}
                   <div className="mt-5 rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm">
