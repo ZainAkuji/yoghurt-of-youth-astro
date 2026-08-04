@@ -156,7 +156,7 @@ export default function Shop() {
   const SUB_PRICING: Record<number, { discount: number; delivery: number; plnWas: number; plnNow: number; flavWas: number; flavNow: number }> = {
     4:  { discount: 5,  delivery: 3.5,  plnWas: 11.20, plnNow: 10.64, flavWas: 11.60, flavNow: 11.02 },
     7:  { discount: 10, delivery: 4.95, plnWas: 16.80, plnNow: 15.12, flavWas: 17.40, flavNow: 15.66 },
-    14: { discount: 20, delivery: 0,    plnWas: 33.60, plnNow: 26.88, flavWas: 34.80, flavNow: 27.84 },
+    14: { discount: 15, delivery: 0,    plnWas: 33.60, plnNow: 28.56, flavWas: 34.80, flavNow: 29.58 },
   };
 
   const MIX_AT: Record<number, string> = {
@@ -601,7 +601,7 @@ export default function Shop() {
                   title: "Weekly subscription",
                   body: (
                     <>
-                      <p>Subscribe to <strong>4, 7 or 14 bottles</strong> every week and save <strong>5%, 10% or 20%</strong>, fermented fresh before each dispatch.</p>
+                      <p>Subscribe to <strong>4, 7 or 14 bottles</strong> every week and save <strong>5%, 10% or 15%</strong>, fermented fresh before each dispatch.</p>
                       <p className="mt-2">Your first batch arrives the coming available <strong>Monday</strong>, then every following Monday. You'll automatically receive each week's rotating strain.</p>
                       <p className="mt-2">Pause, adjust or cancel anytime by emailing <a href="mailto:support@yoghurtofyouth.co.uk" className="underline hover:text-amber-500 transition">support@yoghurtofyouth.co.uk</a>.</p>
                     </>

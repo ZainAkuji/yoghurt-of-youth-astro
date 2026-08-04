@@ -45,7 +45,7 @@ function computeTotals(cart: Record<string, number>, discountPercent = 0, giftSt
 const SUB_PRICING: Record<string, { discount: number; delivery: number; plnWas: number; plnNow: number; flavWas: number; flavNow: number }> = {
   "4":  { discount: 5,  delivery: 3.5,  plnWas: 11.20, plnNow: 10.64, flavWas: 11.60, flavNow: 11.02 },
   "7":  { discount: 10, delivery: 4.95, plnWas: 16.80, plnNow: 15.12, flavWas: 17.40, flavNow: 15.66 },
-  "14": { discount: 20, delivery: 0,    plnWas: 33.60, plnNow: 26.88, flavWas: 34.80, flavNow: 27.84 },
+  "14": { discount: 15, delivery: 0,    plnWas: 33.60, plnNow: 28.56, flavWas: 34.80, flavNow: 29.58 },
 };
 
 const MIX_CONTENTS: Record<string, string> = {
