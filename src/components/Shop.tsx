@@ -217,7 +217,7 @@ export default function Shop() {
 
             {/* ---------- LEFT: week's strain card + rotation preview ---------- */}
             <div>
-              <div className="yoy-shop-card ml-3">
+              <div className="yoy-shop-card ml-3 mr-3">
                 <img
                   className="yoy-shop-card-bg"
                   src={`/${thisWeekBrand.toLowerCase()}.webp`}
@@ -238,7 +238,7 @@ export default function Shop() {
 
               {/* Coming up in the rotation */}
               <p className="mt-3 ml-3 text-xs uppercase tracking-[0.15em] text-slate-500 font-semibold">Coming up</p>
-              <div className="mt-1 ml-3 grid grid-cols-2 gap-3 max-w-[67%]">
+              <div className="mt-1 ml-3 mr-3 grid grid-cols-2 gap-3 max-w-[67%]">
                 {[
                   { brand: nextWeekBrand, label: "Next week" },
                   { brand: weekAfterBrand, label: "The week after" },
