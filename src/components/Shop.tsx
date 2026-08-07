@@ -204,34 +204,62 @@ export default function Shop() {
       {/* ===================== PART 1: TWO-COLUMN SHOP ===================== */}
       <section id="flavours" className="scroll-mt-32 md:scroll-mt-24 w-full bg-white text-slate-900 py-12">
         <div className="mx-auto max-w-6xl px-5">
-          <div className="mb-8 rounded-2xl px-5 py-4">
+          <div className="mb-8 rounded-2xl px-3 py-4">
             <p className="text-xl uppercase tracking-[0.15em] text-slate-900 font-semibold mb-2">Explainer</p>
             <p className="text-sm text-slate-700 leading-relaxed">
               Each week we ferment a different one of our three researched <em>L. reuteri</em> strains, rotating on a three-week cycle. You don't pick the strain, you'll receive whichever one is being made for your delivery, so over three weeks you experience all three. No hassle, no fuss, just the simplest way to experience all three of our researched strains over the cycle.
             </p>
             <p className="mt-2 text-sm text-slate-700 leading-relaxed">
-              <span className="font-semibold text-slate-900">This order will be {thisWeekBrand}</span> · next week will be {nextWeekBrand} · then {weekAfterBrand}.
+              <span className="font-semibold text-slate-900">This order will be {thisWeekBrand}</span> · next week will be {nextWeekBrand} · the week after will be {weekAfterBrand}.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-start">
 
-            {/* ---------- LEFT: week's strain card ---------- */}
-            <div className="yoy-shop-card">
-              <img
-                className="yoy-shop-card-bg"
-                src={`/${thisWeekBrand.toLowerCase()}.webp`}
-                alt={`${thisWeekBrand} — this week's L. reuteri yoghurt`}
-              />
-              <div className="yoy-shop-card-overlay"></div>
-              <div className="yoy-shop-card-content">
-                <div>
-                  <p className="yoy-shop-card-label text-xs uppercase tracking-[0.2em] text-white mb-2">You'll receive</p>
-                  <img
-                    src={`/${thisWeekBrand.toLowerCase()}_logo.png`}
-                    alt={thisWeekBrand}
-                    className="yoy-shop-card-logo"
-                  />
+            {/* ---------- LEFT: week's strain card + rotation preview ---------- */}
+            <div>
+              <div className="yoy-shop-card ml-3">
+                <img
+                  className="yoy-shop-card-bg"
+                  src={`/${thisWeekBrand.toLowerCase()}.webp`}
+                  alt={`${thisWeekBrand} — this week's L. reuteri yoghurt`}
+                />
+                <div className="yoy-shop-card-overlay"></div>
+                <div className="yoy-shop-card-content">
+                  <div>
+                    <p className="yoy-shop-card-label text-xs uppercase tracking-[0.2em] text-white mb-2">You'll receive</p>
+                    <img
+                      src={`/${thisWeekBrand.toLowerCase()}_logo.png`}
+                      alt={thisWeekBrand}
+                      className="yoy-shop-card-logo"
+                    />
+                  </div>
                 </div>
+              </div>
+
+              {/* Coming up in the rotation */}
+              <p className="mt-3 ml-3 text-xs uppercase tracking-[0.15em] text-slate-500 font-semibold">Coming up</p>
+              <div className="mt-1 ml-3 grid grid-cols-2 gap-3 max-w-[67%]">
+                {[
+                  { brand: nextWeekBrand, label: "Next week" },
+                  { brand: weekAfterBrand, label: "The week after" },
+                ].map((n) => (
+                  <div key={n.label} className="yoy-shop-card-mini">
+                    <img
+                      className="yoy-shop-card-bg"
+                      src={`/${n.brand.toLowerCase()}.webp`}
+                      alt={`${n.brand} — ${n.label}`}
+                    />
+                    <div className="yoy-shop-card-mini-dim"></div>
+                    <div className="yoy-shop-card-mini-content">
+                      <p className="yoy-shop-card-label text-[10px] uppercase tracking-[0.15em] text-white/90">{n.label}</p>
+                      <img
+                        src={`/${n.brand.toLowerCase()}_logo.png`}
+                        alt={n.brand}
+                        className="yoy-shop-card-mini-logo"
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
