@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useStore } from "@nanostores/react";
 import {
+  cart as cartStore,
   addQty as storeAddQty,
   drawerOpen as drawerOpenStore,
 } from "../stores/cart";
@@ -123,6 +124,7 @@ function nextEligibleMondayISO(): string {
 
 // ===================== MAIN SHOP ISLAND =====================
 export default function Shop() {
+  const $cart = useStore(cartStore);
   const [nutritionModal, setNutritionModal] = useState<null | { title: string; src: string }>(null);
 
   // ----- New two-column selection state -----
@@ -180,8 +182,16 @@ export default function Shop() {
 
   // ----- One-off stepper state -----
   const s = computeStepper(stepper);
-  const short = Math.max(0, 3 - s.bottles);
-  const canBuy = s.bottles >= 3;
+
+  // Cart + stepper — what the customer will actually pay for
+  const merged: Record<string, number> = {};
+  for (const [k, v] of Object.entries($cart)) merged[k] = Number(v || 0);
+  for (const [k, v] of Object.entries(stepper)) merged[k] = (merged[k] || 0) + v;
+  const m = computeStepper(merged);
+
+  const short = Math.max(0, 3 - m.bottles);
+  const canAdd = s.bottles >= 1;
+  const canPay = m.bottles >= 3;
 
   const FLAVOURS = [
     { id: "PLN", name: "Plain", price: "£2.80", cls: "bg-slate-100 border-slate-300", txt: "text-slate-900", sub: "text-slate-600" },
@@ -387,8 +397,8 @@ export default function Shop() {
                       <p className="text-sm text-slate-600">Minimum order of 3 bottles</p>
                       <p className="mt-0.5 text-sm font-semibold text-slate-900">
                         Buy 7 for the price of 6
-                        {s.freeTotal > 0 && (
-                          <span className="text-emerald-600"> · {s.freeTotal} free bottle{s.freeTotal > 1 ? "s" : ""} applied</span>
+                        {m.freeTotal > 0 && (
+                          <span className="text-emerald-600"> · {m.freeTotal} free bottle{m.freeTotal > 1 ? "s" : ""} applied</span>
                         )}
                       </p>
                     </div>
@@ -405,9 +415,9 @@ export default function Shop() {
                   <p className="mt-5 ml-3 text-sm text-slate-900">Chilled next-day delivery charge:</p>
                   <div className="mt-2 grid grid-cols-3 gap-2">
                     {[
-                      { label: "3–4 bottles", value: "£3.50", active: s.bottles >= 3 && s.bottles <= 4 },
-                      { label: "5–9 bottles", value: "£4.95", active: s.bottles >= 5 && s.bottles <= 9 },
-                      { label: "10+ bottles", value: "FREE", active: s.bottles >= 10 },
+                      { label: "3–4 bottles", value: "£3.50", active: m.bottles >= 3 && m.bottles <= 4 },
+                      { label: "5–9 bottles", value: "£4.95", active: m.bottles >= 5 && m.bottles <= 9 },
+                      { label: "10+ bottles", value: "FREE", active: m.bottles >= 10 },
                     ].map((d) => (
                       <div key={d.label}
                         className={cn("rounded-xl border-2 px-2 py-2 text-center transition",
@@ -421,16 +431,16 @@ export default function Shop() {
                   {/* Running total */}
                   <div className="mt-5 rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm">
                     <div className="flex justify-between text-slate-700">
-                      <span>{s.bottles} bottle{s.bottles === 1 ? "" : "s"}</span><span>{gbp(s.merch)}</span>
+                      <span>{m.bottles} bottle{m.bottles === 1 ? "" : "s"} total</span><span>{gbp(m.merch)}</span>
                     </div>
-                    {s.savings > 0 && (
-                      <div className="flex justify-between text-emerald-600"><span>7 for 6 saving</span><span>−{gbp(s.savings)}</span></div>
+                    {m.savings > 0 && (
+                      <div className="flex justify-between text-emerald-600"><span>7 for 6 saving</span><span>−{gbp(m.savings)}</span></div>
                     )}
                     <div className="flex justify-between text-slate-700">
-                      <span>Delivery</span><span>{s.bottles >= 10 ? "FREE" : gbp(s.delivery)}</span>
+                      <span>Delivery</span><span>{m.bottles >= 10 ? "FREE" : gbp(m.delivery)}</span>
                     </div>
                     <div className="flex justify-between font-bold text-slate-900 text-base mt-1 pt-2 border-t border-slate-200">
-                      <span>Total</span><span>{gbp(s.total)}</span>
+                      <span>Total</span><span>{gbp(m.total)}</span>
                     </div>
                   </div>
 
@@ -441,22 +451,24 @@ export default function Shop() {
 
                   {/* Buy buttons */}
                   <div className="mt-4 flex flex-col gap-3">
-                    {!canBuy && (
+                    {!canPay && (
                       <p className="text-center text-sm font-semibold text-amber-600">
-                        {s.bottles === 0 ? "Add at least 3 bottles to continue" : `Add ${short} more bottle${short > 1 ? "s" : ""} to continue`}
+                        {m.bottles === 0
+                          ? "Add at least 3 bottles to continue"
+                          : `Add ${short} more bottle${short > 1 ? "s" : ""} to continue`}
                       </p>
                     )}
-                    <button type="button" disabled={!canBuy}
+                    <button type="button" disabled={!canAdd}
                       onClick={() => { addStepperToCart(); drawerOpenStore.set(true); }}
                       className={cn("w-full rounded-2xl px-6 py-3.5 text-sm font-bold transition flex items-center justify-center gap-2",
-                        canBuy ? "bg-slate-900 text-white hover:bg-slate-700" : "bg-slate-100 text-slate-400 cursor-not-allowed")}>
+                        canAdd ? "bg-slate-900 text-white hover:bg-slate-700" : "bg-slate-100 text-slate-400 cursor-not-allowed")}>
                       <span>Add to basket</span>
-                      {canBuy && <><span className="opacity-50">·</span><span>{gbp(s.total)}</span></>}
+                      {canAdd && <><span className="opacity-50">·</span><span>{gbp(s.merch)}</span></>}
                     </button>
-                    <button type="button" disabled={!canBuy}
-                      onClick={() => { addStepperToCart(); window.location.href = "/checkout"; }}
+                    <button type="button" disabled={!canPay}
+                      onClick={() => { if (s.bottles > 0) addStepperToCart(); window.location.href = "/checkout"; }}
                       className={cn("w-full rounded-2xl px-6 py-3.5 text-sm font-bold transition",
-                        canBuy ? "bg-amber-400 text-slate-900 hover:bg-amber-300" : "bg-slate-100 text-slate-400 cursor-not-allowed")}>
+                        canPay ? "bg-amber-400 text-slate-900 hover:bg-amber-300" : "bg-slate-100 text-slate-400 cursor-not-allowed")}>
                       Pay now
                     </button>
                   </div>

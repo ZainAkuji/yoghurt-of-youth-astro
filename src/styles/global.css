@@ -22,7 +22,7 @@ a {
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-heading: "Poppins", ui-sans-serif, system-ui, sans-serif;
-  --breakpoint-xs: 480px;
+  --breakpoint-xs: 520px;
 }
 
 .yoy-shop-card { position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(15,23,42,0.10); aspect-ratio: 1 / 1; }
