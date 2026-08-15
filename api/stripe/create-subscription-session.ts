@@ -28,19 +28,19 @@ const MIX_CONTENTS: Record<string, string> = {
   "14": "4 BFC, 6 STR, 4 MNG",
 };
 
-// Next Monday 21:00 (server local time). If that's < 48h away, push to the Monday after.
-function nextMonday2100With48hRuleUnix(): number {
+// Next Thursday 21:00 (server local time). If that's < 48h away, push to the Thursday after.
+function nextThursday2100With48hRuleUnix(): number {
   const now = new Date();
 
   const d = new Date(now);
   d.setHours(0, 0, 0, 0);
 
-  const day = d.getDay(); // 0..6 (Sun..Sat)
-  let addDays = (8 - day) % 7;
-  if (addDays === 0) addDays = 7; // always "coming" Monday
+  const day = d.getDay(); // 0..6 (Sun..Sat), Thursday = 4
+  let addDays = (4 - day + 7) % 7;
+  if (addDays === 0) addDays = 7; // always the "coming" Thursday
   d.setDate(d.getDate() + addDays);
 
-  // Monday 21:00
+  // Thursday 21:00
   d.setHours(21, 0, 0, 0);
 
   let trialEnd = Math.floor(d.getTime() / 1000);
@@ -71,7 +71,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-    const trialEnd = nextMonday2100With48hRuleUnix();
+    const trialEnd = nextThursday2100With48hRuleUnix();
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",

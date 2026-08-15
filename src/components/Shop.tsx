@@ -57,9 +57,13 @@ function strainForMonday(monday: Date): string {
 // The Monday date whose batch an order maps to, per mode.
 function mondayForMode(mode: "oneoff" | "subscribe"): Date {
   if (mode === "subscribe") {
-    const iso = nextEligibleMondayISO(); // Sat-9pm cutoff logic
+    // Dispatch is Thursday; the rotation is anchored to Mondays, so step back
+    // to the Monday of that same week to look up the strain.
+    const iso = nextEligibleMondayISO();
     const [y, mo, d] = iso.split("-").map(Number);
-    return new Date(y, mo - 1, d);
+    const thu = new Date(y, mo - 1, d);
+    thu.setDate(thu.getDate() - 3); // Thursday -> Monday of the same week
+    return thu;
   }
   // one-off: current Wed-midnight..Wed-midnight window -> the following Monday's batch
   const d = new Date();
@@ -107,16 +111,19 @@ function nextDispatchISO(): string {
   d.setDate(d.getDate() + add);
   return toISODate(d);
 }
+
+// Next eligible subscription dispatch day (Thursday), with a Tuesday 21:00 cutoff
+// to satisfy Stripe's 48-hour minimum before the first charge.
 function nextEligibleMondayISO(): string {
   const now = new Date();
   const d = new Date(now);
   d.setHours(0, 0, 0, 0);
   const day = d.getDay();
-  let daysUntilMonday = (8 - day) % 7;
-  if (daysUntilMonday === 0) daysUntilMonday = 7;
-  d.setDate(d.getDate() + daysUntilMonday);
+  let daysUntil = (4 - day + 7) % 7;   // Thursday = 4
+  if (daysUntil === 0) daysUntil = 7;
+  d.setDate(d.getDate() + daysUntil);
   const cutoff = new Date(d);
-  cutoff.setDate(d.getDate() - 2);
+  cutoff.setDate(d.getDate() - 2);      // Tuesday 21:00
   cutoff.setHours(21, 0, 0, 0);
   if (now.getTime() >= cutoff.getTime()) d.setDate(d.getDate() + 7);
   return toISODate(d);
@@ -577,7 +584,7 @@ export default function Shop() {
 
                   {/* Dispatch */}
                   <p className="mt-3 ml-3 text-sm text-slate-600">
-                    First dispatch: <strong>{formatDateUK(nextEligibleMondayISO())} Monday</strong>, then every Monday
+                    First dispatch: <strong>{formatDateUK(nextEligibleMondayISO())} Thursday</strong>, then every Thursday
                   </p>
 
                   {/* Subscribe button */}
@@ -642,7 +649,7 @@ export default function Shop() {
                   body: (
                     <>
                       <p>Subscribe to <strong>4, 7 or 14 bottles</strong> every week and save <strong>5%, 10% or 15%</strong>, fermented fresh before each dispatch.</p>
-                      <p className="mt-2">Your first batch arrives the coming available <strong>Monday</strong>, then every following Monday. You'll automatically receive each week's rotating strain.</p>
+                      <p className="mt-2">Your first batch is dispatched on the coming available <strong>Thursday</strong>, then every following Thursday. You'll automatically receive each week's rotating strain.</p>
                       <p className="mt-2">Pause, adjust or cancel anytime by emailing <a href="mailto:support@yoghurtofyouth.co.uk" className="underline hover:text-amber-500 transition">support@yoghurtofyouth.co.uk</a>.</p>
                     </>
                   ),

@@ -63,7 +63,7 @@ function toISODate(d: Date) { const y=d.getFullYear(),m=String(d.getMonth()+1).p
 function formatDateUK(iso: string) { if(!iso||!/^\d{4}-\d{2}-\d{2}$/.test(iso))return iso||""; const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; }
 function weekdayFromISO(iso: string) { const [y,m,d]=iso.split("-").map(Number); const date=new Date(y,m-1,d); return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][date.getDay()]; }
 function nextDispatchISO(): string { const d=new Date(); d.setHours(0,0,0,0); const day=d.getDay(); const target=day>=3&&day<=6?1:4; let add=(target-day+7)%7; if(add===0)add=7; d.setDate(d.getDate()+add); return toISODate(d); }
-function nextEligibleMondayISO(): string { const now=new Date(); const d=new Date(now); d.setHours(0,0,0,0); const day=d.getDay(); let u=(8-day)%7; if(u===0)u=7; d.setDate(d.getDate()+u); const cutoff=new Date(d); cutoff.setDate(d.getDate()-2); cutoff.setHours(21,0,0,0); if(now.getTime()>=cutoff.getTime())d.setDate(d.getDate()+7); return toISODate(d); }
+function nextEligibleMondayISO(): string { const now=new Date(); const d=new Date(now); d.setHours(0,0,0,0); const day=d.getDay(); let u=(4-day+7)%7; if(u===0)u=7; d.setDate(d.getDate()+u); const cutoff=new Date(d); cutoff.setDate(d.getDate()-2); cutoff.setHours(21,0,0,0); if(now.getTime()>=cutoff.getTime())d.setDate(d.getDate()+7); return toISODate(d); }
 
 export default function Checkout() {
   const $cart = useStore(cartStore);
@@ -252,7 +252,7 @@ export default function Checkout() {
               : <> — including {gbp(subP.delivery)} chilled next-day delivery.</>}
           </p>
           <p className="mt-3">
-            First dispatch: <span className="font-semibold">{firstText}</span>, then every following Monday.
+            First dispatch: <span className="font-semibold">{firstText}</span>, then every following Thursday.
           </p>
         </div>
       ) : (

@@ -293,7 +293,7 @@ function buildSubCustomerHtml(p: {
       <p style="margin:0 0 14px;">Thank you for subscribing to <strong>Yoghurt of Youth</strong>. Your weekly subscription is now live. Your yoghurts are fermented on the day before dispatch for freshness.</p>
       <p style="margin:0 0 14px;">Your order will be sent via Next Day delivery and should arrive the next day. The package is insulated and chilled to maintain the correct temperature for the products during transit.</p>
       <p style="margin:0 0 14px;">Please ensure someone is available to receive the parcel, or select a safe place if preferred.</p>
-      <p style="margin:0 0 14px;">After the first dispatch day, your subscription will be dispatched every following Monday.</p>
+      <p style="margin:0 0 14px;">After the first dispatch day, your subscription will be dispatched every following Thursday.</p>
       <p style="margin:0 0 18px;">Below are the full details of your subscription.</p>
       <p style="margin:0 0 18px;">Please leave us a review on Google and follow us on Instagram. Links are down below.</p>
       <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px;margin-bottom:16px;">
@@ -301,7 +301,7 @@ function buildSubCustomerHtml(p: {
       </div>
       <table role="presentation" style="border-collapse:collapse;width:100%;"><tbody>
         <tr><td style="padding:6px 0;width:45%;color:#555;"><strong>First dispatch:</strong></td><td style="padding:6px 0;">${p.deliveryDate}</td></tr>
-        <tr><td style="padding:6px 0;color:#555;"><strong>Billing:</strong></td><td style="padding:6px 0;">Weekly · charged on <strong>Monday</strong></td></tr>
+        <tr><td style="padding:6px 0;color:#555;"><strong>Billing:</strong></td><td style="padding:6px 0;">Weekly · charged on <strong>Thursday</strong></td></tr>
         <tr><td style="padding:6px 0;color:#555;"><strong>Delivery address:</strong></td><td style="padding:6px 0;">${p.customerAddress}</td></tr>
         <tr><td style="padding:10px 0;border-top:1px solid #e2e8f0;"><strong>Weekly price:</strong></td><td style="padding:10px 0;border-top:1px solid #e2e8f0;"><strong>${p.totalPaid}</strong></td></tr>
       </tbody></table>
@@ -355,7 +355,7 @@ function buildSubOwnerHtml(p: {
       </tbody></table>
       <h4 style="margin:0 0 8px;font-size:16px;">Billing</h4>
       <table role="presentation" style="border-collapse:collapse;width:100%;margin-bottom:14px;"><tbody>
-        <tr><td style="padding:6px 0;width:45%;color:#555;"><strong>Schedule:</strong></td><td style="padding:6px 0;">Weekly · charged Mondays</td></tr>
+        <tr><td style="padding:6px 0;width:45%;color:#555;"><strong>Schedule:</strong></td><td style="padding:6px 0;">Weekly · charged Thursdays</td></tr>
         <tr><td style="padding:6px 0;color:#555;"><strong>Weekly price:</strong></td><td style="padding:6px 0;"><strong>${p.totalPaid}</strong></td></tr>
         <tr><td style="padding:6px 0;color:#555;"><strong>Payment method:</strong></td><td style="padding:6px 0;">Stripe (subscription)</td></tr>
       </tbody></table>
