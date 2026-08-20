@@ -200,6 +200,11 @@ export default function Shop() {
   const canAdd = s.bottles >= 1;
   const canPay = m.bottles >= 3;
 
+  const QUICK = [3, 7, 10, 14];
+
+  const quickFill = (n: number) =>
+    setStepper({ PLN: n, BFC: 0, STR: 0, MNG: 0 });
+
   const FLAVOURS = [
     { id: "PLN", name: "Plain", price: "£2.80", cls: "bg-slate-100 border-slate-300", txt: "text-slate-900", sub: "text-slate-600" },
     { id: "BFC", name: "Black Forest Chocolate", price: "£2.90", cls: "bg-pink-100 border-amber-800", txt: "text-slate-900", sub: "text-slate-600" },
@@ -377,7 +382,7 @@ export default function Shop() {
 
               {/* ============ ONE-OFF ============ */}
               {buyMode === "oneoff" && (
-                <>
+                <>                  
                   {/* Flavour pills */}
                   <div className="mt-5 grid grid-cols-2 gap-3">
                     {FLAVOURS.map((f) => (
@@ -403,9 +408,9 @@ export default function Shop() {
                     <div>
                       <p className="text-sm text-slate-600">Minimum order of 3 bottles</p>
                       <p className="mt-0.5 text-sm font-semibold text-slate-900">
-                        Buy 7 for the price of 6
+                        Buy 7 for the price of 6 · 14 for 12
                         {m.freeTotal > 0 && (
-                          <span className="text-emerald-600"> · {m.freeTotal} free bottle{m.freeTotal > 1 ? "s" : ""} applied</span>
+                          <span className="text-emerald-600"> · {m.freeTotal} free bottle{m.freeTotal > 1 ? "s" : ""}</span>
                         )}
                       </p>
                     </div>
@@ -504,6 +509,8 @@ export default function Shop() {
                           <p className="text-base font-bold text-slate-900">{t}</p>
                           <p className="text-[11px] text-slate-600">bottles</p>
                           <p className="mt-1 text-xs font-semibold text-emerald-600">Save {p.discount}%</p>
+                          {t === 7 && <p className="text-[10px] font-semibold text-slate-600">1 bottle free</p>}
+                          {t === 14 && <p className="text-[10px] font-semibold text-slate-600">2 bottles free · free delivery</p>}
                         </button>
                       );
                     })}
