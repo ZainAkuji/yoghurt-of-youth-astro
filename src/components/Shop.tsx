@@ -399,6 +399,23 @@ export default function Shop() {
                           <button type="button" onClick={() => bump(f.id, 1)}
                             className="w-8 h-8 grid place-items-center rounded-lg bg-slate-900 text-white hover:bg-slate-700 transition text-lg leading-none">+</button>
                         </div>
+                        <div className="mt-3 flex items-center gap-1.5">
+                          <span className={cn("text-[10px] shrink-0", f.sub)}>Quick add:</span>
+                          <div className="grid grid-cols-4 gap-1 flex-1">
+                            {[4, 7, 10, 14].map((n) => (
+                              <button key={n} type="button"
+                                onClick={() => setStepper((p) => ({ ...p, [f.id]: n }))}
+                                className={cn(
+                                  "rounded-md py-1 text-[11px] font-semibold transition",
+                                  (stepper[f.id] || 0) === n
+                                    ? "bg-slate-900 text-white"
+                                    : "bg-white/70 text-slate-600 hover:bg-white"
+                                )}>
+                                {n}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
