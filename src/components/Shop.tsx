@@ -399,23 +399,6 @@ export default function Shop() {
                           <button type="button" onClick={() => bump(f.id, 1)}
                             className="w-8 h-8 grid place-items-center rounded-lg bg-slate-900 text-white hover:bg-slate-700 transition text-lg leading-none">+</button>
                         </div>
-                        <div className="mt-3 flex items-center gap-1.5">
-                          <span className={cn("text-[10px] shrink-0", f.sub)}>Quick add:</span>
-                          <div className="grid grid-cols-4 gap-1 flex-1">
-                            {[4, 7, 10, 14].map((n) => (
-                              <button key={n} type="button"
-                                onClick={() => setStepper((p) => ({ ...p, [f.id]: n }))}
-                                className={cn(
-                                  "rounded-md py-1 text-[11px] font-semibold transition",
-                                  (stepper[f.id] || 0) === n
-                                    ? "bg-slate-900 text-white"
-                                    : "bg-white/70 text-slate-600 hover:bg-white"
-                                )}>
-                                {n}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
                       </div>
                     ))}
                   </div>
@@ -425,7 +408,7 @@ export default function Shop() {
                     <div>
                       <p className="text-sm text-slate-600">Minimum order of 3 bottles</p>
                       <p className="mt-0.5 text-sm font-semibold text-slate-900">
-                        Buy 7 for the price of 6 · 14 for 12
+                        Buy 7 for the price of 6
                         {m.freeTotal > 0 && (
                           <span className="text-emerald-600"> · {m.freeTotal} free bottle{m.freeTotal > 1 ? "s" : ""}</span>
                         )}
@@ -526,8 +509,9 @@ export default function Shop() {
                           <p className="text-base font-bold text-slate-900">{t}</p>
                           <p className="text-[11px] text-slate-600">bottles</p>
                           <p className="mt-1 text-xs font-semibold text-emerald-600">Save {p.discount}%</p>
-                          {t === 7 && <p className="text-[10px] font-semibold text-slate-600">1 bottle free</p>}
-                          {t === 14 && <p className="text-[10px] font-semibold text-slate-600">2 bottles free · free delivery</p>}
+                          {t === 7 && <p className="text-xs font-semibold text-emerald-600">1 bottle free</p>}
+                          {t === 14 && <p className="text-xs font-semibold text-emerald-600">2 bottles free</p>}
+                          {t === 14 && <p className="text-xs font-semibold text-emerald-600">Free delivery</p>}
                         </button>
                       );
                     })}
