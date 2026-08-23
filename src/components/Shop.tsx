@@ -240,10 +240,14 @@ export default function Shop() {
             {/* ---------- LEFT: week's strain card + rotation preview ---------- */}
             <div>
               <div className="yoy-shop-card ml-3 mr-3">
-                <img
+                <video
                   className="yoy-shop-card-bg"
-                  src={`/${thisWeekBrand.toLowerCase()}.webp`}
-                  alt={`${thisWeekBrand} — this week's L. reuteri yoghurt`}
+                  src={`/${thisWeekBrand.toLowerCase()}.mp4`}
+                  poster={`/${thisWeekBrand.toLowerCase()}.webp`}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
                 />
                 <div className="yoy-shop-card-overlay"></div>
                 <div className="yoy-shop-card-content">
