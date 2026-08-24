@@ -34,6 +34,7 @@ a {
   isolation: isolate;
   transform: translateZ(0);
   clip-path: inset(0 round 20px);
+  mask-image: radial-gradient(#fff, #fff);
 }
 .yoy-shop-card-bg {
   position: absolute;
