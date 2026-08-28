@@ -303,7 +303,7 @@ export default function Shop() {
               <div className="mt-3 ml-3">
                 <p className="text-sm text-slate-600">
                   <a href="https://g.page/r/CWkxtud6iKYlEAE/review" target="_blank" rel="noopener noreferrer" className="font-semibold text-slate-800 hover:text-amber-500 transition">
-                    <span className="text-lg">★★★★★</span> 4.8 on{" "}
+                    <span className="text-lg">★★★★★</span> 4.9 on{" "}
                     <span className="text-[#4285F4]">G</span><span className="text-[#EA4335]">o</span><span className="text-[#FBBC05]">o</span><span className="text-[#4285F4]">g</span><span className="text-[#34A853]">l</span><span className="text-[#EA4335]">e</span>
                   </a>
                   <span className="mx-2 text-slate-800">·</span>
