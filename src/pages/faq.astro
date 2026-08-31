@@ -1,0 +1,130 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout
+  title="Frequently Asked Questions | Yoghurt of Youth"
+  description="Answers to common questions about our live L. reuteri yoghurt — how much to drink, the milk we use, shelf life, histamine, and A2 milk."
+>
+  <section
+    id="faq"
+    class="relative scroll-mt-32 md:scroll-mt-24 bg-white text-slate-800 py-12"
+  >
+    <div class="max-w-3xl mx-auto px-8">
+      <h1 class="text-2xl md:text-3xl font-bold text-slate-900">
+        Frequently Asked Questions
+      </h1>
+
+      <p class="mt-4 text-slate-700 text-sm leading-relaxed">
+        These are the questions customers ask most often. If yours isn't here,
+        email us at
+        <a href="mailto:support@yoghurtofyouth.co.uk" class="underline hover:text-amber-500 transition">support@yoghurtofyouth.co.uk</a>
+        and we'll answer it.
+      </p>
+
+      <div class="mt-8 divide-y divide-slate-200 border-t border-b border-slate-200">
+
+        <details class="group">
+          <summary class="flex items-center justify-between py-4 cursor-pointer list-none text-sm font-semibold text-slate-900 hover:text-amber-600 transition">
+            <span>How much should I drink?</span>
+            <span class="text-slate-400 transition-transform group-open:rotate-180">▾</span>
+          </summary>
+          <div class="pb-4 text-sm text-slate-600 leading-relaxed">
+            <p>One 250ml bottle a day is what most of our customers settle on, and it's what our seven-bottle subscription is built around.</p>
+            <p class="mt-2">There's nothing fixed about it, though. Half a bottle a day works perfectly well if you'd rather start gently or make it last, and some people drink two. It's a food, not a dose, so find what suits you.</p>
+          </div>
+        </details>
+
+        <details class="group">
+          <summary class="flex items-center justify-between py-4 cursor-pointer list-none text-sm font-semibold text-slate-900 hover:text-amber-600 transition">
+            <span>Is the milk organic?</span>
+            <span class="text-slate-400 transition-transform group-open:rotate-180">▾</span>
+          </summary>
+          <div class="pb-4 text-sm text-slate-600 leading-relaxed">
+            <p>No, our milk is not certified organic. We use British UHT whole milk.</p>
+            <p class="mt-2">British dairy herds are predominantly pasture-fed, grazing outdoors through the grass-growing season and moving onto silage (preserved grass) over the winter months. That is the ordinary pattern of British dairy farming rather than something we've specified, but it does mean the milk comes from a grass-based system.</p>
+            <p class="mt-2">On antibiotics: dairy cattle in the UK are treated when they have an infection, not as a matter of routine, and treatment is expensive enough that no farmer uses it casually. More importantly, it is a legal requirement that milk from a treated cow is withheld from the food chain for a set withdrawal period until the medicine has cleared. Milk is tested for antibiotic residues at collection, and a tanker that fails is rejected. This applies to all British milk, organic or not.</p>
+            <p class="mt-2">Organic certification covers a range of things, such as grazing minimums, restrictions on fertilisers and feed, and stricter rules on antibiotic use, so that organic milk costs more to produce as a result. We use standard British milk because it is affordable while still coming from a grass and silage based system, and because the withdrawal rules described above apply to all British milk regardless of certification. We haven't ruled organic out for the future.</p>
+            <p class="mt-2">We chose UHT milk deliberately. Heat treatment removes any organisms present in the raw milk, which means the only culture growing in the ferment is the <em>L. reuteri</em> strain we introduce. That is what allows us to make a genuinely single-strain yoghurt rather than one where our strain competes with whatever else was in the milk.</p>
+          </div>
+        </details>
+
+        <details class="group">
+          <summary class="flex items-center justify-between py-4 cursor-pointer list-none text-sm font-semibold text-slate-900 hover:text-amber-600 transition">
+            <span>What is the use-by date?</span>
+            <span class="text-slate-400 transition-transform group-open:rotate-180">▾</span>
+          </summary>
+          <div class="pb-4 text-sm text-slate-600 leading-relaxed">
+            <p>Two weeks from dispatch. Every bottle is labelled with its own use-by date.</p>
+            <p class="mt-2">We ferment the day before your order goes out, so the yoghurt reaches you within days of being made. Keep it refrigerated.</p>
+            <p class="mt-2">You may notice some separation after a few days in the fridge. That's normal in a live yoghurt with nothing added to hold it together, so give it a shake before drinking.</p>
+          </div>
+        </details>
+
+        <details class="group">
+          <summary class="flex items-center justify-between py-4 cursor-pointer list-none text-sm font-semibold text-slate-900 hover:text-amber-600 transition">
+            <span>I have a histamine intolerance. Which strains contain histamine?</span>
+            <span class="text-slate-400 transition-transform group-open:rotate-180">▾</span>
+          </summary>
+          <div class="pb-4 text-sm text-slate-600 leading-relaxed">
+            <p>This is a good question, and the answer differs between our three strains, which is one of the advantages of fermenting them separately rather than blending them.</p>
+            <p class="mt-2"><strong>LVLV</strong> is fermented with <em>L. reuteri</em> ATCC PTA 6475. This strain carries the histidine decarboxylase gene cluster and is documented in published research as producing histamine from the amino acid histidine. In fact, that histamine production is central to much of the research interest in the strain.</p>
+            <p class="mt-2"><strong>SPCTRL</strong> is fermented with <em>L. reuteri</em> DSM 17938, which research indicates does not produce histamine, because it lacks the relevant genes. <strong>PRCXN</strong> uses DSM 17648, which is not documented as a histamine producer.</p>
+            <p class="mt-2">We can't tell you whether our yoghurt is suitable for you, and we wouldn't try. If you have a diagnosed histamine intolerance, please speak to your doctor or dietitian, who can advise you properly. We've set the facts out here so that you and they have what you need.</p>
+            <p class="mt-2">Because our strains rotate weekly, you could receive LVLV one week in three, which would be indicated on the shop page. If you get in touch we can arrange for you to receive PRCXN or SPCTRL instead.</p>
+          </div>
+        </details>
+
+        <details class="group">
+          <summary class="flex items-center justify-between py-4 cursor-pointer list-none text-sm font-semibold text-slate-900 hover:text-amber-600 transition">
+            <span>Do you use A2 milk?</span>
+            <span class="text-slate-400 transition-transform group-open:rotate-180">▾</span>
+          </summary>
+          <div class="pb-4 text-sm text-slate-600 leading-relaxed">
+            <p>No. A2 milk isn't widely available from suppliers in our area, and we haven't been able to source it reliably at the quantity and consistency we need.</p>
+            <p class="mt-2">It's something we would consider if that changes. For now, we use British UHT whole milk, which contains both A1 and A2 beta-casein as ordinary dairy milk does.</p>
+          </div>
+        </details>
+
+        <details class="group">
+          <summary class="flex items-center justify-between py-4 cursor-pointer list-none text-sm font-semibold text-slate-900 hover:text-amber-600 transition">
+            <span>Is it lactose-free?</span>
+            <span class="text-slate-400 transition-transform group-open:rotate-180">▾</span>
+          </summary>
+          <div class="pb-4 text-sm text-slate-600 leading-relaxed">
+            <p>Yes. We add lactase during fermentation, which breaks down the lactose in the milk.</p>
+            <p class="mt-2">It is still a dairy product, so it is not suitable if you have a milk allergy as opposed to a lactose intolerance.</p>
+          </div>
+        </details>
+
+        <details class="group">
+          <summary class="flex items-center justify-between py-4 cursor-pointer list-none text-sm font-semibold text-slate-900 hover:text-amber-600 transition">
+            <span>Can I choose which strain I receive?</span>
+            <span class="text-slate-400 transition-transform group-open:rotate-180">▾</span>
+          </summary>
+          <div class="pb-4 text-sm text-slate-600 leading-relaxed">
+            <p>Not directly. We ferment one strain each week and rotate through all three on a three-week cycle, so you receive whichever is being made for your delivery.</p>
+            <p class="mt-2">The shop page always shows which strain your order will contain, along with the two coming after it. If you particularly want a certain strain, you can time your order, or email us and we'll tell you when it's next being fermented.</p>
+          </div>
+        </details>
+
+      </div>
+
+      <div class="mt-10 flex flex-wrap gap-3">
+        <a href="/shop" class="rounded-2xl bg-amber-400 text-slate-900 px-6 py-2.5 text-sm font-semibold hover:bg-amber-300 transition">
+          Shop Now
+        </a>
+        <a href="/about" class="rounded-2xl bg-slate-900 text-white px-6 py-2.5 text-sm font-semibold hover:bg-slate-700 transition">
+          Learn More
+        </a>
+      </div>
+
+      <p class="mt-8 text-slate-600 text-xs leading-relaxed">
+        Yoghurt of Youth makes live fermented foods, not medicines. Nothing on this
+        page is medical advice, or a claim that our products treat, cure or prevent
+        any condition. If you have health concerns, please speak with a qualified
+        healthcare professional.
+      </p>
+    </div>
+  </section>
+</Layout>

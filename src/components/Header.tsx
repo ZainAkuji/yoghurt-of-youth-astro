@@ -81,6 +81,7 @@ export default function Header({ brand, transparentHero = false }: { brand: stri
                     <div className="absolute left-1/2 -translate-x-1/2 mt-4 w-28 rounded-xl bg-white border border-slate-200 shadow-xl py-2 z-50">
                       <a href="/story" className="block px-4 py-2 text-sm text-center text-slate-800 hover:bg-slate-100 hover:text-amber-500 transition-colors">Our Story</a>
                       <a href="/about" className="block px-4 py-2 text-sm text-center text-slate-800 hover:bg-slate-100 hover:text-amber-500 transition-colors">About</a>
+                      <a href="/faq" className="block px-4 py-2 text-sm text-center text-slate-800 hover:bg-slate-100 hover:text-amber-500 transition-colors">FAQ</a>
                       <a href="/contact" className="block px-4 py-2 text-sm text-center text-slate-800 hover:bg-slate-100 hover:text-amber-500 transition-colors">Contact</a>
                     </div>
                   )}
@@ -135,7 +136,8 @@ export default function Header({ brand, transparentHero = false }: { brand: stri
                   )}
                 </div>
 
-                {/* Contact — visible xs and up */}
+                {/* FAQ and Contact — visible xs and up */}
+                <a href="/faq" className="hidden xs:inline hover:text-amber-400 transition-colors">FAQ</a>
                 <a href="/contact" className="hidden xs:inline hover:text-amber-400 transition-colors">Contact</a>
               </div>
 
