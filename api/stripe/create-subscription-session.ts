@@ -1,6 +1,27 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Stripe from "stripe";
 
+// MUST MATCH src/config/dispatch.ts
+const SUBSCRIPTION_DAY = 4; // Thursday
+
+function toISODate(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+// MUST MATCH BLOCKED_DISPATCH in src/config/dispatch.ts — refresh annually
+const BLOCKED_DISPATCH = new Set([
+  "2026-12-24", "2026-12-28", "2026-12-31",
+  "2027-03-25", "2027-03-29",
+  "2027-05-03", "2027-05-31", "2027-08-30",
+  "2027-12-27", "2028-01-03",
+  "2028-04-13", "2028-04-17",
+  "2028-05-01", "2028-05-29", "2028-08-28",
+  "2028-12-25", "2029-01-01",
+]);
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 const TIERS = ["4", "7", "14"] as const;
@@ -28,32 +49,25 @@ const MIX_CONTENTS: Record<string, string> = {
   "14": "4 BFC, 6 STR, 4 MNG",
 };
 
-// Next Thursday 21:00 (server local time). If that's < 48h away, push to the Thursday after.
-function nextThursday2100With48hRuleUnix(): number {
+// Next subscription dispatch day at 21:00, skipping blocked dates and
+// respecting Stripe's 48-hour minimum for trial_end.
+function nextSubscriptionTrialEnd(): number {
   const now = new Date();
-
   const d = new Date(now);
   d.setHours(0, 0, 0, 0);
 
-  const day = d.getDay(); // 0..6 (Sun..Sat), Thursday = 4
-  let addDays = (4 - day + 7) % 7;
-  if (addDays === 0) addDays = 7; // always the "coming" Thursday
-  d.setDate(d.getDate() + addDays);
+  let guard = 0;
+  while (guard++ < 60) {
+    d.setDate(d.getDate() + 1);
+    if (d.getDay() !== SUBSCRIPTION_DAY) continue;
+    if (BLOCKED_DISPATCH.has(toISODate(d))) continue;
 
-  // Thursday 21:00
-  d.setHours(21, 0, 0, 0);
-
-  let trialEnd = Math.floor(d.getTime() / 1000);
-
-  // Stripe requires trial_end at least 48h in the future
-  const nowUnix = Math.floor(now.getTime() / 1000);
-  const MIN_SECONDS = 48 * 60 * 60;
-
-  if (trialEnd - nowUnix < MIN_SECONDS) {
-    trialEnd += 7 * 24 * 60 * 60; // push one week
+    const charge = new Date(d);
+    charge.setHours(21, 0, 0, 0);
+    const trialEnd = Math.floor(charge.getTime() / 1000);
+    if (trialEnd - Math.floor(now.getTime() / 1000) >= 48 * 60 * 60) return trialEnd;
   }
-
-  return trialEnd;
+  throw new Error("Could not find a valid subscription dispatch date");
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -71,7 +85,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-    const trialEnd = nextThursday2100With48hRuleUnix();
+        const trialEnd = nextSubscriptionTrialEnd();
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",

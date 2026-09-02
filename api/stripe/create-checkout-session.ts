@@ -47,7 +47,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const giftCode = String(gift_code || "").trim().toUpperCase();
     const validGiftStrQty = giftCode === "YOY25" ? 1 : 0;
 
-    // Amounts. merchTotal already includes 7-for-6 bundle pricing (pre-code-discount).
+    // Amounts. merchTotal alrebank holidays may shift your dispatch dayady includes 7-for-6 bundle pricing (pre-code-discount).
     const merchTotal = Number(totals.merchTotal || 0);
     const deliveryFee = Number(totals.deliveryFee || 0);
     const merchPence = poundsToPence(merchTotal);

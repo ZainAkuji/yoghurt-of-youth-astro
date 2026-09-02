@@ -2,6 +2,16 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useStore } from "@nanostores/react";
 import { cart as cartStore } from "../stores/cart";
 import { sendCAPIEvent, newEventId } from "../capi";
+import {
+  SUBSCRIPTION_DAY_NAME,
+  SUBSCRIPTION_DAY,
+  toISODate,
+  formatDateUK,
+  weekdayFromISO,
+  nextDispatchISO,
+  nextSubscriptionISO,
+  dispatchDelayed,
+} from "../config/dispatch";
 
 const gbp = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
@@ -58,13 +68,6 @@ const FLAVOUR_NAMES: Record<string, string> = {
   PLN: "Plain", BFC: "Black Forest", STR: "Strawberry", MNG: "Mango", MIX: "Mixed",
 };
 
-// date helpers
-function toISODate(d: Date) { const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0"); return `${y}-${m}-${day}`; }
-function formatDateUK(iso: string) { if(!iso||!/^\d{4}-\d{2}-\d{2}$/.test(iso))return iso||""; const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; }
-function weekdayFromISO(iso: string) { const [y,m,d]=iso.split("-").map(Number); const date=new Date(y,m-1,d); return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][date.getDay()]; }
-function nextDispatchISO(): string { const d=new Date(); d.setHours(0,0,0,0); const day=d.getDay(); const target=day>=3&&day<=6?1:4; let add=(target-day+7)%7; if(add===0)add=7; d.setDate(d.getDate()+add); return toISODate(d); }
-function nextEligibleMondayISO(): string { const now=new Date(); const d=new Date(now); d.setHours(0,0,0,0); const day=d.getDay(); let u=(4-day+7)%7; if(u===0)u=7; d.setDate(d.getDate()+u); const cutoff=new Date(d); cutoff.setDate(d.getDate()-2); cutoff.setHours(21,0,0,0); if(now.getTime()>=cutoff.getTime())d.setDate(d.getDate()+7); return toISODate(d); }
-
 export default function Checkout() {
   const $cart = useStore(cartStore);
   const cart = useMemo(() => {
@@ -91,7 +94,7 @@ export default function Checkout() {
   const subNow = subPlan === "PLN" ? subP.plnNow : subP.flavNow;
   const subWas = subPlan === "PLN" ? subP.plnWas : subP.flavWas;
   const subWeekly = subNow + subP.delivery;
-  const firstISO = nextEligibleMondayISO();
+  const firstISO = nextSubscriptionISO();
   const firstText = `${formatDateUK(firstISO)} ${weekdayFromISO(firstISO)}`;
   const date = nextDispatchISO();
   const formattedDate = formatDateUK(date);
@@ -252,7 +255,7 @@ export default function Checkout() {
               : <> — including {gbp(subP.delivery)} chilled next-day delivery.</>}
           </p>
           <p className="mt-3">
-            First dispatch: <span className="font-semibold">{firstText}</span>, then every following Thursday.
+            First dispatch: <span className="font-semibold">{firstText}</span>, then every following {SUBSCRIPTION_DAY_NAME}.
           </p>
         </div>
       ) : (
@@ -263,6 +266,11 @@ export default function Checkout() {
           <p className="mt-3">
             Dispatch date: <span className="font-semibold">{formattedDate} {weekdayFromISO(date)}</span>. Fermented fresh the day before.
           </p>
+          {dispatchDelayed(isSubscription ? "subscription" : "oneoff") && (
+          <p className="mt-2 ml-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+            Bank holidays are affecting courier services this week, so this order will be dispatched on the date shown above rather than the usual schedule.
+          </p>
+        )}
         </div>
       )}
 
@@ -272,21 +280,6 @@ export default function Checkout() {
           <p className="mt-2 ml-3 text-xs text-slate-500">Have a one-time discount code? Apply it at the secure checkout on the next step.</p>
         )}
       </div>
-
-      {/*{!isSubscription && (
-        <div className="mt-4">
-          <div className="flex gap-2">
-            <input value={giftCode} onChange={(e)=>setGiftCode(e.target.value)} placeholder="Strawberry promo code" className={cn(inputCls, "flex-1")} />
-            {discountPercent > 0 ? (
-              <div className="px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold flex items-center">Applied: 10% off</div>
-            ) : giftStrQty > 0 ? (
-              <div className="px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold flex items-center">Applied: +1 free STR</div>
-            ) : (
-              <div className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-400 text-sm flex items-center">Not applied</div>
-            )}
-          </div>
-        </div>
-      )}*/}
 
       {!isSubscription && qtyTotal > 0 && (
         <div className="mt-6 rounded-2xl bg-slate-50 border border-slate-200 p-5 text-sm text-slate-700">

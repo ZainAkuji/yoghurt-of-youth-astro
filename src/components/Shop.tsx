@@ -6,6 +6,16 @@ import {
   drawerOpen as drawerOpenStore,
 } from "../stores/cart";
 import { sendCAPIEvent, newEventId } from "../capi";
+import {
+  SUBSCRIPTION_DAY_NAME,
+  SUBSCRIPTION_DAY,
+  toISODate,
+  formatDateUK,
+  weekdayFromISO,
+  nextDispatchISO,
+  nextSubscriptionISO,
+  dispatchDelayed,
+} from "../config/dispatch";
 
 // ---------- Utils ----------
 const gbp = (n: number) =>
@@ -56,77 +66,17 @@ function strainForMonday(monday: Date): string {
 
 // The Monday date whose batch an order maps to, per mode.
 function mondayForMode(mode: "oneoff" | "subscribe"): Date {
-  if (mode === "subscribe") {
-    // Dispatch is Thursday; the rotation is anchored to Mondays, so step back
-    // to the Monday of that same week to look up the strain.
-    const iso = nextEligibleMondayISO();
-    const [y, mo, d] = iso.split("-").map(Number);
-    const thu = new Date(y, mo - 1, d);
-    thu.setDate(thu.getDate() - 3); // Thursday -> Monday of the same week
-    return thu;
-  }
-  // one-off: current Wed-midnight..Wed-midnight window -> the following Monday's batch
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  const day = d.getDay();               // 0 Sun ... 3 Wed
-  const daysSinceWed = (day - 3 + 7) % 7;
-  const windowStart = new Date(d);
-  windowStart.setDate(d.getDate() - daysSinceWed); // most recent Wed 00:00
-  const nextMon = new Date(windowStart);
-  let toMon = (1 - windowStart.getDay() + 7) % 7;   // Wed -> next Mon = 5
-  if (toMon === 0) toMon = 7;
-  nextMon.setDate(windowStart.getDate() + toMon);
-  return nextMon;
+  const iso = mode === "subscribe" ? nextSubscriptionISO() : nextDispatchISO();
+  const [y, mo, d] = iso.split("-").map(Number);
+  const dispatch = new Date(y, mo - 1, d);
+  // Rotation is anchored to Mondays — step back to the Monday of that week
+  const back = (dispatch.getDay() - 1 + 7) % 7;
+  dispatch.setDate(dispatch.getDate() - back);
+  return dispatch;
 }
 
 function getBrandForMode(mode: "oneoff" | "subscribe"): string {
   return strainForMonday(mondayForMode(mode));
-}
-
-// ===================== DATE HELPERS =====================
-function toISODate(d: Date) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-function formatDateUK(iso: string) {
-  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso || "";
-  const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
-}
-function weekdayFromISO(iso: string) {
-  const [y, m, d] = iso.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
-  const names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  return names[date.getDay()];
-}
-function nextDispatchISO(): string {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  const day = d.getDay();
-  const target = day >= 3 && day <= 6 ? 1 : 4;
-  let add = (target - day + 7) % 7;
-  if (add === 0) add = 7;
-  d.setDate(d.getDate() + add);
-  return toISODate(d);
-}
-
-// Next eligible subscription dispatch day (Thursday), with a Tuesday 21:00 cutoff
-// to satisfy Stripe's 48-hour minimum before the first charge.
-function nextEligibleMondayISO(): string {
-  const now = new Date();
-  const d = new Date(now);
-  d.setHours(0, 0, 0, 0);
-  const day = d.getDay();
-  let daysUntil = (4 - day + 7) % 7;   // Thursday = 4
-  if (daysUntil === 0) daysUntil = 7;
-  d.setDate(d.getDate() + daysUntil);
-  const cutoff = new Date(d);
-  cutoff.setDate(d.getDate() - 2);      // Tuesday 21:00
-  cutoff.setHours(21, 0, 0, 0);
-  if (now.getTime() >= cutoff.getTime()) d.setDate(d.getDate() + 7);
-  return toISODate(d);
 }
 
 // ===================== MAIN SHOP ISLAND =====================
@@ -464,6 +414,11 @@ export default function Shop() {
                   <p className="mt-3 ml-3 text-sm text-slate-600">
                     Dispatch date: <strong>{formatDateUK(nextDispatchISO())} {weekdayFromISO(nextDispatchISO())}</strong>
                   </p>
+                  {dispatchDelayed("oneoff") && (
+                    <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                      Bank holidays are affecting courier services, so this order will be dispatched on the date above rather than the usual schedule.
+                    </p>
+                  )}
 
                   {/* Buy buttons */}
                   <div className="mt-4 flex flex-col gap-3">
@@ -596,8 +551,13 @@ export default function Shop() {
 
                   {/* Dispatch */}
                   <p className="mt-3 ml-3 text-sm text-slate-600">
-                    First dispatch: <strong>{formatDateUK(nextEligibleMondayISO())} Thursday</strong>, then every Thursday
+                    First dispatch: <strong>{formatDateUK(nextSubscriptionISO())} {SUBSCRIPTION_DAY_NAME}</strong>, then every {SUBSCRIPTION_DAY_NAME}
                   </p>
+                  {dispatchDelayed("subscription") && (
+                    <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                      Bank holidays are affecting courier services, so your first dispatch is later than usual. Subsequent weeks follow the normal schedule.
+                    </p>
+                  )}
 
                   {/* Subscribe button */}
                   <div className="mt-4">
@@ -651,7 +611,7 @@ export default function Shop() {
                   body: (
                     <>
                       <p>Chilled next-day delivery: <strong>£3.50</strong> on 3–4 bottles, <strong>£4.95</strong> on 5–9, and <strong>free</strong> on 10 or more.</p>
-                      <p className="mt-2">We ferment the day before dispatch and send orders on <strong>Mondays</strong> and <strong>Thursdays</strong> via next-day delivery.</p>
+                      <p className="mt-2">We ferment the day before dispatch and send orders on <strong>Mondays</strong> and <strong>Thursdays</strong> via next-day delivery. Bank holidays may shift your dispatch day. The date shown at checkout is always the one we'll use.</p>
                     </>
                   ),
                 },
@@ -661,7 +621,7 @@ export default function Shop() {
                   body: (
                     <>
                       <p>Subscribe to <strong>4, 7 or 14 bottles</strong> every week and save <strong>5%, 10% or 15%</strong>, fermented fresh before each dispatch.</p>
-                      <p className="mt-2">Your first batch is dispatched on the coming available <strong>Thursday</strong>, then every following Thursday. You'll automatically receive each week's rotating strain.</p>
+                      <p className="mt-2">Your first batch is dispatched on the coming available <strong>{SUBSCRIPTION_DAY_NAME}</strong>, then every following {SUBSCRIPTION_DAY_NAME}. Bank holidays may shift your dispatch day. You'll automatically receive each week's rotating strain.</p>
                       <p className="mt-2">Pause, adjust or cancel anytime by emailing <a href="mailto:support@yoghurtofyouth.co.uk" className="underline hover:text-amber-500 transition">support@yoghurtofyouth.co.uk</a>.</p>
                     </>
                   ),
