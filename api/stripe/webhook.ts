@@ -99,6 +99,7 @@ const MIX_CONTENTS: Record<string, string> = {
   "4": "1× BFC, 2× STR, 1× MNG",
   "7": "2× BFC, 3× STR, 2× MNG",
   "14": "4× BFC, 6× STR, 4× MNG",
+  "21": "6× BFC, 9× STR, 6× MNG",
 };
 
 function subscriptionLines(planKey: string, tier: string) {

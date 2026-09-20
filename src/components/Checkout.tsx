@@ -56,12 +56,14 @@ const SUB_PRICING: Record<string, { discount: number; delivery: number; plnWas: 
   "4":  { discount: 5,  delivery: 3.5,  plnWas: 11.20, plnNow: 10.64, flavWas: 11.60, flavNow: 11.02 },
   "7":  { discount: 10, delivery: 4.95, plnWas: 16.80, plnNow: 15.12, flavWas: 17.40, flavNow: 15.66 },
   "14": { discount: 15, delivery: 0,    plnWas: 33.60, plnNow: 28.56, flavWas: 34.80, flavNow: 29.58 },
+  "21": { discount: 20, delivery: 0,    plnWas: 50.40, plnNow: 40.32, flavWas: 52.20, flavNow: 41.76 },
 };
 
 const MIX_CONTENTS: Record<string, string> = {
   "4": "1 BFC, 2 STR, 1 MNG",
   "7": "2 BFC, 3 STR, 2 MNG",
   "14": "4 BFC, 6 STR, 4 MNG",
+  "21": "6 BFC, 9 STR, 6 MNG",
 };
 
 const FLAVOUR_NAMES: Record<string, string> = {

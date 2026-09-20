@@ -109,19 +109,21 @@ export default function Shop() {
   const weekAfterBrand = strainForMonday(new Date(_thisMonday.getTime() + 14 * 86400000));
 
   // ----- Subscription state -----
-  const [subTier, setSubTier] = useState<4 | 7 | 14>(7);
+  const [subTier, setSubTier] = useState<4 | 7 | 14 | 21>(7);
   const [subFlavour, setSubFlavour] = useState<string>("PLN");
 
   const SUB_PRICING: Record<number, { discount: number; delivery: number; plnWas: number; plnNow: number; flavWas: number; flavNow: number }> = {
     4:  { discount: 5,  delivery: 3.5,  plnWas: 11.20, plnNow: 10.64, flavWas: 11.60, flavNow: 11.02 },
     7:  { discount: 10, delivery: 4.95, plnWas: 16.80, plnNow: 15.12, flavWas: 17.40, flavNow: 15.66 },
     14: { discount: 15, delivery: 0,    plnWas: 33.60, plnNow: 28.56, flavWas: 34.80, flavNow: 29.58 },
+    21: { discount: 20, delivery: 0,    plnWas: 50.40, plnNow: 40.32, flavWas: 52.20, flavNow: 41.76 },
   };
 
   const MIX_AT: Record<number, string> = {
     4: "1 BFC, 2 STR, 1 MNG",
     7: "2 BFC, 3 STR, 2 MNG",
     14: "4 BFC, 6 STR, 4 MNG",
+    21: "6 BFC, 9 STR, 6 MNG",
   };
 
   const subP = SUB_PRICING[subTier];
@@ -451,15 +453,15 @@ export default function Shop() {
                 <>
                   {/* Tier pills */}
                   <p className="mt-5 ml-3 text-sm font-semibold text-slate-900">Bottles per week</p>
-                  <div className="mt-2 grid grid-cols-3 gap-2">
-                    {[4, 7, 14].map((t) => {
+                  <div className="mt-2 grid grid-cols-2 xs:grid-cols-4 gap-2">
+                    {[4, 7, 14, 21].map((t) => {
                       const p = SUB_PRICING[t];
                       const active = subTier === t;
                       return (
                         <button
                           key={t}
                           type="button"
-                          onClick={() => setSubTier(t as 4 | 7 | 14)}
+                          onClick={() => setSubTier(t as 4 | 7 | 14 | 21)}
                           className={cn(
                             "rounded-xl border-2 px-2 py-3 text-center transition",
                             active ? "border-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-300"
@@ -471,6 +473,8 @@ export default function Shop() {
                           {t === 7 && <p className="text-xs font-semibold text-emerald-600">1 bottle free</p>}
                           {t === 14 && <p className="text-xs font-semibold text-emerald-600">2 bottles free</p>}
                           {t === 14 && <p className="text-xs font-semibold text-emerald-600">Free delivery</p>}
+                          {t === 21 && <p className="text-xs font-semibold text-emerald-600">3 bottles free</p>}
+                          {t === 21 && <p className="text-xs font-semibold text-emerald-600">Free delivery</p>}
                         </button>
                       );
                     })}
@@ -512,11 +516,12 @@ export default function Shop() {
 
                   {/* Delivery pills */}
                   <p className="mt-5 ml-3 text-sm font-semibold text-slate-900">Chilled next-day delivery charge</p>
-                  <div className="mt-2 grid grid-cols-3 gap-2">
+                  <div className="mt-2 grid grid-cols-2 xs:grid-cols-4 gap-2">
                     {[
                       { tier: 4, value: "£3.50" },
                       { tier: 7, value: "£4.95" },
                       { tier: 14, value: "FREE" },
+                      { tier: 21, value: "FREE" },
                     ].map((d) => (
                       <div
                         key={d.tier}
@@ -620,7 +625,7 @@ export default function Shop() {
                   title: "Weekly subscription",
                   body: (
                     <>
-                      <p>Subscribe to <strong>4, 7 or 14 bottles</strong> every week and save <strong>5%, 10% or 15%</strong>, fermented fresh before each dispatch.</p>
+                      <p>Subscribe to <strong>4, 7, 14 or 21 bottles</strong> every week and save <strong>5%, 10%, 15% or 20%</strong>, fermented fresh before each dispatch.</p>
                       <p className="mt-2">Your first batch is dispatched on the coming available <strong>{SUBSCRIPTION_DAY_NAME}</strong>, then every following {SUBSCRIPTION_DAY_NAME}. Bank holidays may shift your dispatch day. You'll automatically receive each week's rotating strain.</p>
                       <p className="mt-2">Pause, adjust or cancel anytime by emailing <a href="mailto:support@yoghurtofyouth.co.uk" className="underline hover:text-amber-500 transition">support@yoghurtofyouth.co.uk</a>.</p>
                     </>

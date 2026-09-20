@@ -24,7 +24,7 @@ const BLOCKED_DISPATCH = new Set([
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
-const TIERS = ["4", "7", "14"] as const;
+const TIERS = ["4", "7", "14", "21"] as const;
 const FLAVOURS = ["PLN", "BFC", "STR", "MNG", "MIX"] as const;
 
 function getPriceId(planKey: string, tier: string) {
@@ -33,9 +33,11 @@ function getPriceId(planKey: string, tier: string) {
     PLN_4:   process.env.STRIPE_PRICE_SUB_PLN_4,
     PLN_7:   process.env.STRIPE_PRICE_SUB_PLN_7,
     PLN_14:  process.env.STRIPE_PRICE_SUB_PLN_14,
+    PLN_21:  process.env.STRIPE_PRICE_SUB_PLN_21,
     FLAV_4:  process.env.STRIPE_PRICE_SUB_FLAV_4,
     FLAV_7:  process.env.STRIPE_PRICE_SUB_FLAV_7,
     FLAV_14: process.env.STRIPE_PRICE_SUB_FLAV_14,
+    FLAV_21: process.env.STRIPE_PRICE_SUB_FLAV_21,
   };
   const key = `${group}_${tier}`;
   const id = map[key];
@@ -47,6 +49,7 @@ const MIX_CONTENTS: Record<string, string> = {
   "4": "1 BFC, 2 STR, 1 MNG",
   "7": "2 BFC, 3 STR, 2 MNG",
   "14": "4 BFC, 6 STR, 4 MNG",
+  "21": "6 BFC, 9 STR, 6 MNG",
 };
 
 // Next subscription dispatch day at 21:00, skipping blocked dates and
