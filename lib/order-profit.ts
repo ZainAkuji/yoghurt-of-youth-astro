@@ -1,26 +1,25 @@
 // Costs from YoY Finances.xlsx, Pricing tab.
 // Money is calculated in pence: 1200 = £12.
 
-export const DAILY_AD_SPEND_PENCE = 1200;
-export const COST_MODEL = "pricing-2026-09-28";
+import { marketingSpend } from "./poas-history";
+export const COST_MODEL = "pricing-2026-09-28-15plus";
 
 export function estimateOrderProfit(
   paidPence: number,
   bottles: number
 ) {
-  // Your spreadsheet currently covers orders of 1–14 bottles.
+  // Accept any positive whole bottle count.
   if (
     !Number.isSafeInteger(paidPence) ||
     paidPence < 0 ||
     !Number.isSafeInteger(bottles) ||
-    bottles < 1 ||
-    bottles > 14
+    bottles < 1
   ) {
     return null;
   }
 
   const bottleCostPence = bottles * 50;
-  const deliveryCostPence = bottles <= 4 ? 523 : 815;
+  const deliveryCostPence = bottles <= 4 ? 523 : bottles <= 14 ? 815 : 850;
 
   // Estimated Stripe fee from your spreadsheet.
   const stripeFeePence =
@@ -88,6 +87,7 @@ export function profitEmailHtml(
   totals: number[]
 ) {
   const [orders, profit, unknown] = totals;
+  const spend = marketingSpend(day);
   const complete = unknown === 0;
 
   const row = (label: string, value: string) => `
@@ -122,7 +122,7 @@ export function profitEmailHtml(
               )
             : row(
                 "This order",
-                "Cost estimate unavailable: check bottle quantity (model covers 1–14)."
+                "Cost estimate unavailable: check bottle quantity."
               )
         }
 
@@ -139,21 +139,21 @@ export function profitEmailHtml(
         )}
 
         ${row(
-          "Daily ad budget",
-          gbp(DAILY_AD_SPEND_PENCE)
+          "Daily marketing cost",
+          gbp(spend)
         )}
 
         ${row(
           "Day’s POAS so far",
           complete
-            ? `${(profit / DAILY_AD_SPEND_PENCE).toFixed(2)}×`
+            ? (spend === 0 ? "N/A: no marketing spend" : `${(profit / spend).toFixed(2)}×`)
             : "Unavailable: missing cost estimates"
         )}
 
         ${row(
-          "Day’s profit after daily ad budget",
+          "Day’s profit after daily marketing cost",
           complete
-            ? gbp(profit - DAILY_AD_SPEND_PENCE)
+            ? gbp(profit - spend)
             : "Unavailable"
         )}
       </tbody>
@@ -169,7 +169,7 @@ export function profitEmailHtml(
       All one-off sales, including organic sales; not ad-attributed.
       Running totals include only orders recorded since deployment,
       before refunds and other overheads.
-      Full £12 daily budget is used, not spend so far.
+      Full ${gbp(spend)} daily marketing cost is used, not spend so far.
     </p>
   `;
 }

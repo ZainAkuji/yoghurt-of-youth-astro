@@ -1,3 +1,4 @@
+import { poasHistoryHtml } from "../../lib/poas-history";
 import Stripe from "stripe";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { Redis } from "@upstash/redis";
@@ -496,6 +497,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           day,
           values.map(Number)
         );
+        try {
+          oneOffProfitHtml += await poasHistoryHtml(
+            redis,
+            event.livemode,
+            londonDay(Math.floor(Date.now() / 1000))
+          );
+        } catch (error) {
+          console.error("POAS history unavailable", error);
+          oneOffProfitHtml += "<p>Historical POAS temporarily unavailable.</p>";
+        }
       }
     }
 
