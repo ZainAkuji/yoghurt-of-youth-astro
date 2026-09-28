@@ -1,6 +1,13 @@
 import Stripe from "stripe";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { Redis } from "@upstash/redis";
+import {
+  COST_MODEL,
+  estimateOrderProfit,
+  londonDay,
+  profitEmailHtml,
+  RECORD_PROFIT_LUA,
+} from "../../lib/order-profit";
 
 // MUST MATCH SUBSCRIPTION_DAY in src/config/dispatch.ts
 const SUBSCRIPTION_DAY = 4; // Thursday
@@ -226,7 +233,9 @@ function buildOneOffOwnerHtml(p: {
   customerAddress: string; orderId: string;
   deliveryDate: string; bottles: string; merchandiseTotal: string;
   deliveryFee: string; discountText: string; totalPaid: string;
-  orderLines: string; note: string;
+  orderLines: string;
+  note: string;
+  profitHtml: string;
 }) {
   const sectionTitle = "Delivery";
   const dateLabel = "Dispatch date";
@@ -270,6 +279,7 @@ function buildOneOffOwnerHtml(p: {
         ${deliveryFeeRow}
         <tr><td style="padding:10px 0;border-top:1px solid #e2e8f0;"><strong>Total paid:</strong></td><td style="padding:10px 0;border-top:1px solid #e2e8f0;"><strong>${p.totalPaid}</strong></td></tr>
       </tbody></table>
+      ${p.profitHtml}
       ${noteHtml}
       <p style="margin:16px 0 0;"><strong>– Yoghurt of Youth</strong></p>
     </div>
@@ -415,13 +425,87 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       process.env.STRIPE_WEBHOOK_SECRET as string
     );
 
+        const checkoutEvent =
+      event.type === "checkout.session.completed" ||
+      event.type === "checkout.session.async_payment_succeeded";
+
+    let oneOffProfitHtml = "";
+
+    if (checkoutEvent) {
+      const paidSession =
+        event.data.object as Stripe.Checkout.Session;
+
+      if (paidSession.mode === "payment") {
+        // Wait for successful payment before recording the order.
+        if (
+          paidSession.payment_status !== "paid" &&
+          paidSession.payment_status !== "no_payment_required"
+        ) {
+          return res.status(200).json({
+            received: true,
+            awaitingPayment: true,
+          });
+        }
+
+        if (
+          paidSession.currency !== "gbp" ||
+          paidSession.amount_total === null
+        ) {
+          throw new Error(
+            "One-off profit requires a GBP Checkout amount"
+          );
+        }
+
+        // Your checkout already includes gift bottles in this quantity.
+        const estimate = estimateOrderProfit(
+          paidSession.amount_total,
+          Number(paidSession.metadata?.bottles)
+        );
+
+        const day = londonDay(event.created);
+
+        // Separate test-mode totals from real orders.
+        const key =
+          `yoy:oneoff-profit:v1:` +
+          `${event.livemode ? "live" : "test"}:${day}`;
+
+        const record = JSON.stringify({
+          model: COST_MODEL,
+          paidPence: paidSession.amount_total,
+          bottles: paidSession.metadata?.bottles || "",
+          estimate,
+        });
+
+        // Save the order and update its day's total together.
+        // This happens before the existing email deduplication check.
+        const values = (
+          await redis.eval(
+            RECORD_PROFIT_LUA,
+            [key],
+            [
+              paidSession.id,
+              record,
+              String(estimate?.profitPence ?? 0),
+              estimate ? "0" : "1",
+            ]
+          )
+        ) as (string | number)[];
+
+        oneOffProfitHtml = profitEmailHtml(
+          estimate,
+          day,
+          values.map(Number)
+        );
+      }
+    }
+
     // Idempotency per Stripe event id
     const idKey = `stripe_webhook_done:${event.id}`;
     if (await alreadyProcessedOnce(idKey)) {
       return res.status(200).json({ received: true, deduped: true });
     }
 
-    if (event.type === "checkout.session.completed") {
+    if (checkoutEvent) {
       const session = event.data.object as Stripe.Checkout.Session;
       const ownerEmail = process.env.OWNER_EMAIL || "zainul.akuji@gmail.com";
 
@@ -576,6 +660,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const oneOffOwnerHtml = buildOneOffOwnerHtml({
+        profitHtml: oneOffProfitHtml,
         customerName,
         customerEmail,
         customerPhone,
