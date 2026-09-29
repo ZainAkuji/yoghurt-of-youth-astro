@@ -1,4 +1,4 @@
-import { poasHistoryHtml } from "../../lib/poas-history";
+import { poasHistoryHtml } from "../../lib/poas-history.js";
 import Stripe from "stripe";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { Redis } from "@upstash/redis";
@@ -8,7 +8,7 @@ import {
   londonDay,
   profitEmailHtml,
   RECORD_PROFIT_LUA,
-} from "../../lib/order-profit";
+} from "../../lib/order-profit.js";
 
 // MUST MATCH SUBSCRIPTION_DAY in src/config/dispatch.ts
 const SUBSCRIPTION_DAY = 4; // Thursday

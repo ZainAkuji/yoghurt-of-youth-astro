@@ -1,7 +1,7 @@
 // Costs from YoY Finances.xlsx, Pricing tab.
 // Money is calculated in pence: 1200 = £12.
 
-import { marketingSpend } from "./poas-history";
+import { marketingSpend } from "./poas-history.js";
 export const COST_MODEL = "pricing-2026-09-28-15plus";
 
 export function estimateOrderProfit(
