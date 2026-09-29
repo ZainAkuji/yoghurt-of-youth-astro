@@ -117,7 +117,7 @@ export async function poasHistoryHtml(
     </tr>`;
 
   return `
-    <h4>Blended one-off POAS — completed UK days</h4>
+    <h4>Running POAS since 29th September 2026</h4>
 
     <table role="presentation" style="width:100%">
       <tbody>
@@ -136,12 +136,8 @@ export async function poasHistoryHtml(
     </table>
 
     <p style="font-size:12px;color:#555">
-      Tracking starts ${POAS_START_DATE}.
       Total estimated one-off profit before marketing divided by
-      total marketing cost. Includes organic orders and marketing
-      costs on zero-order days; excludes today, subscriptions,
-      refunds and other overheads. Uses your configured daily costs,
-      not an automatic import of actual advertising spend.
+      total marketing cost.
     </p>
   `;
 }

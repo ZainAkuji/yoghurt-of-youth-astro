@@ -109,15 +109,15 @@ export function profitEmailHtml(
             ? row("Bottle cost", gbp(estimate.bottleCostPence)) +
               row("Delivery cost", gbp(estimate.deliveryCostPence)) +
               row(
-                "Estimated Stripe fee",
+                "Stripe fee",
                 gbp(estimate.stripeFeePence)
               ) +
               row(
-                "Total order cost",
+                "Total cost",
                 gbp(estimate.totalCostPence)
               ) +
               row(
-                "This order: profit before ads",
+                "Profit",
                 gbp(estimate.profitPence)
               )
             : row(
@@ -127,31 +127,31 @@ export function profitEmailHtml(
         }
 
         ${row(
-          `One-off orders recorded for ${day} (UK time)`,
+          `One-off orders today`,
           String(orders)
         )}
 
         ${row(
           complete
-            ? "Day’s running profit before ads"
+            ? "Today's running profit"
             : "Known profit subtotal (incomplete)",
           gbp(profit)
         )}
 
         ${row(
-          "Daily marketing cost",
+          "Daily ad spend",
           gbp(spend)
         )}
 
         ${row(
-          "Day’s POAS so far",
+          "Today’s running POAS",
           complete
             ? (spend === 0 ? "N/A: no marketing spend" : `${(profit / spend).toFixed(2)}×`)
             : "Unavailable: missing cost estimates"
         )}
 
         ${row(
-          "Day’s profit after daily marketing cost",
+          "Today’s profit after daily ad spend",
           complete
             ? gbp(profit - spend)
             : "Unavailable"
@@ -166,10 +166,6 @@ export function profitEmailHtml(
           : ""
       }
       Estimated using £0.50 per bottle and Stripe fees of 1.5% + 20p.
-      All one-off sales, including organic sales; not ad-attributed.
-      Running totals include only orders recorded since deployment,
-      before refunds and other overheads.
-      Full ${gbp(spend)} daily marketing cost is used, not spend so far.
     </p>
   `;
 }
