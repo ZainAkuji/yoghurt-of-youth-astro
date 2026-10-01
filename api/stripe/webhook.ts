@@ -11,7 +11,7 @@ import {
 } from "../../lib/order-profit.js";
 
 // MUST MATCH SUBSCRIPTION_DAY in src/config/dispatch.ts
-const SUBSCRIPTION_DAY = 4; // Thursday
+const SUBSCRIPTION_DAY = 1; // Thursday
 const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const SUBSCRIPTION_DAY_NAME = DAY_NAMES[SUBSCRIPTION_DAY];
 

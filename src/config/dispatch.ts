@@ -5,7 +5,7 @@
 // ============================================================
 
 // 0 = Sunday, 1 = Monday ... 6 = Saturday
-export const SUBSCRIPTION_DAY = 4; // Thursday
+export const SUBSCRIPTION_DAY = 1; // Thursday
 
 export const DAY_NAMES = [
   "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",

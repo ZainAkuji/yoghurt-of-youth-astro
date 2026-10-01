@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Stripe from "stripe";
 
 // MUST MATCH src/config/dispatch.ts
-const SUBSCRIPTION_DAY = 4; // Thursday
+const SUBSCRIPTION_DAY = 1; // Thursday
 
 function toISODate(d: Date) {
   const y = d.getFullYear();
