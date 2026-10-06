@@ -100,7 +100,7 @@ export default function GoogleReviews({ data, loading }: ReviewsState) {
   const more = Math.min(6, Math.max(0, reviews.length - visible));
 
   return (
-    <section id="customer-reviews" aria-labelledby="customer-reviews-title" className="mt-14 scroll-mt-28 border-t border-slate-200 pt-10">
+    <section id="customer-reviews" aria-labelledby="customer-reviews-title" className="mt-16 scroll-mt-28 border-slate-200">
       <div className="flex flex-wrap items-end justify-between gap-5">
         <div>
           <h2 id="customer-reviews-title" className="text-xl font-bold text-slate-900 sm:text-2xl">Customer reviews</h2>
