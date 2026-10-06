@@ -255,11 +255,13 @@ export default function Shop() {
 
               {/* Review line + benefits */}
               <div className="mt-3 ml-3">
-                <p className="text-sm text-slate-600">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-5 text-slate-600">
                   <GoogleReviewSummary data={googleReviews.data} />
-                  <span className="mx-2 text-slate-800">·</span>
-                  100s of satisfied customers
-                </p>
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                    <span aria-hidden="true" className="text-slate-800">·</span>
+                    <span>100s of satisfied customers</span>
+                  </span>
+                </div>
                 <p className="mt-1 text-sm text-slate-600">
                   100+ billion CFU
                   <span className="mx-2 text-slate-300">·</span>
