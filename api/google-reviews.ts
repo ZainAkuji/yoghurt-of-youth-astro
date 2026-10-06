@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getGoogleReviewsResponse } from "../lib/google-reviews";
+import { getGoogleReviewsResponse } from "../lib/google-reviews.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const result = await getGoogleReviewsResponse(req.method, process.env);

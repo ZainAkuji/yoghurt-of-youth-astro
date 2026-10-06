@@ -3,7 +3,7 @@ import {
   GOOGLE_REVIEWS_FALLBACK_URL,
   type GoogleReview,
   type GoogleReviewsData,
-} from "../src/config/google-reviews";
+} from "../src/config/google-reviews.js";
 
 type Environment = Record<string, string | undefined>;
 type JsonObject = Record<string, unknown>;
