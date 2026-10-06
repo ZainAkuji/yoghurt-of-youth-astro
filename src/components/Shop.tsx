@@ -6,6 +6,7 @@ import {
   drawerOpen as drawerOpenStore,
 } from "../stores/cart";
 import { sendCAPIEvent, newEventId } from "../capi";
+import GoogleReviews, { GoogleReviewSummary, useGoogleReviews } from "./GoogleReviews";
 import {
   SUBSCRIPTION_DAY_NAME,
   SUBSCRIPTION_DAY,
@@ -82,6 +83,7 @@ function getBrandForMode(mode: "oneoff" | "subscribe"): string {
 // ===================== MAIN SHOP ISLAND =====================
 export default function Shop() {
   const $cart = useStore(cartStore);
+  const googleReviews = useGoogleReviews();
   const [nutritionModal, setNutritionModal] = useState<null | { title: string; src: string }>(null);
 
   // ----- New two-column selection state -----
@@ -254,10 +256,7 @@ export default function Shop() {
               {/* Review line + benefits */}
               <div className="mt-3 ml-3">
                 <p className="text-sm text-slate-600">
-                  <a href="https://g.page/r/CWkxtud6iKYlEAE/review" target="_blank" rel="noopener noreferrer" className="font-semibold text-slate-800 hover:text-amber-500 transition">
-                    <span className="text-lg">★★★★★</span> 4.9 on{" "}
-                    <span className="text-[#4285F4]">G</span><span className="text-[#EA4335]">o</span><span className="text-[#FBBC05]">o</span><span className="text-[#4285F4]">g</span><span className="text-[#34A853]">l</span><span className="text-[#EA4335]">e</span>
-                  </a>
+                  <GoogleReviewSummary data={googleReviews.data} />
                   <span className="mx-2 text-slate-800">·</span>
                   100+ satisfied customers
                 </p>
@@ -647,6 +646,7 @@ export default function Shop() {
                 </div>
               ))}
             </div>
+            <GoogleReviews {...googleReviews} />
           </div>
         </div>
       </section>
