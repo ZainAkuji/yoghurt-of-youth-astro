@@ -1,39 +1,10 @@
+import { computeTotals, FREE_DELIVERY_BOTTLES } from "../../lib/pricing";
 import React, { useEffect, useState } from "react";
 import { useStore } from "@nanostores/react";
 import { cart as cartStore, clearCart as storeClear, addQty as storeAddQty, drawerOpen as drawerOpenStore } from "../stores/cart";
 
 const gbp = (n: number) => new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
 const cn = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(" ");
-
-const PRODUCTS = [
-  { id: "PLN", name: "PLN", price: 2.8, size: "250 mL" },
-  { id: "BFC", name: "BFC", price: 2.9, size: "250 mL" },
-  { id: "STR", name: "STR", price: 2.9, size: "250 mL" },
-  { id: "MNG", name: "MNG", price: 2.9, size: "250 mL" },
-];
-
-const DELIVERY = (n: number) => (n <= 0 ? 0 : n <= 4 ? 3.5 : n <= 9 ? 4.95 : 0);
-
-function computeTotals(cart: Record<string, number>) {
-  const items = Object.entries(cart).map(([id, qty]) => {
-    const p = PRODUCTS.find((x) => x.id === id); return p ? { ...p, qty } : null;
-  }).filter(Boolean) as Array<(typeof PRODUCTS)[number] & { qty: number }>;
-
-  const plainQty = items.filter(i => i.id === "PLN").reduce((s, i) => s + i.qty, 0);
-  const flavQty  = items.filter(i => i.id !== "PLN").reduce((s, i) => s + i.qty, 0);
-  const qtyTotal = plainQty + flavQty;
-
-  const freeTotal = Math.floor(qtyTotal / 7);
-  const freePlain = Math.min(freeTotal, plainQty);
-  const freeFlav  = freeTotal - freePlain;
-
-  const merchTotal = (plainQty - freePlain) * 2.8 + (flavQty - freeFlav) * 2.9;
-  const fullPrice  = plainQty * 2.8 + flavQty * 2.9;
-  const savings    = Math.max(0, fullPrice - merchTotal);
-  const deliveryFee = DELIVERY(qtyTotal);
-
-  return { items, qtyTotal, merchTotal, savings, deliveryFee, total: merchTotal + deliveryFee, freeTotal };
-}
 
 const FLAVOUR_STYLE: Record<string, { bg: string; emoji: string }> = {
   PLN: { bg: "bg-white/15", emoji: "🥛" },
@@ -67,7 +38,7 @@ export default function CartDrawer() {
 
   const cart: Record<string, number> = {};
   for (const [k, v] of Object.entries($cart)) cart[k] = Number(v || 0);
-  const { items, qtyTotal, merchTotal, savings, deliveryFee, total, freeTotal } = computeTotals(cart);
+  const { items, qtyTotal, merchTotal, deliveryFee, total } = computeTotals(cart);
 
   function pay() {
     window.location.href = "/checkout";
@@ -109,8 +80,7 @@ export default function CartDrawer() {
             <div className="border-t border-white/20 pt-4 space-y-2 text-sm text-white/80">
               <div className="flex justify-between"><span>Bottles</span><span>{qtyTotal}</span></div>
               <div className="flex justify-between"><span>Subtotal</span><span>{gbp(merchTotal)}</span></div>
-              {freeTotal > 0 && <div className="flex justify-between text-emerald-400"><span>7 for 6 ({freeTotal} free)</span><span>−{gbp(savings)}</span></div>}
-              <div className="flex justify-between"><span>Delivery</span><span>{qtyTotal >= 10 ? "FREE" : gbp(deliveryFee)}</span></div>
+              <div className="flex justify-between"><span>Delivery</span><span>{qtyTotal >= FREE_DELIVERY_BOTTLES ? "FREE" : gbp(deliveryFee)}</span></div>
               {qtyTotal > 0 && qtyTotal < 3 && (
                 <div className="text-amber-300 text-xs pt-1">Minimum order is 3 bottles</div>
               )}

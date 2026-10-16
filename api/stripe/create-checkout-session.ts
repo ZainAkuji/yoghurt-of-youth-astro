@@ -1,13 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Stripe from "stripe";
+import { computeTotals, isValidCart, MIN_ORDER_BOTTLES } from "../../lib/pricing.js";
 
 // Persistent Stripe Product for the yoghurt (coupons' applies_to targets this)
 const YOGHURT_PRODUCT_ID = "prod_Uo4XG1pLRRdGwC";
-
-// If your totals are in GBP pounds (e.g. 12.50), convert to pence (1250)
-function poundsToPence(amount: number) {
-  return Math.round(Number(amount || 0) * 100);
-}
 
 // Ensure URLs always include protocol (Stripe redirects behave better this way)
 function normalizeSiteUrl(url: string) {
@@ -23,10 +19,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed." });
 
   try {
-    const { cart, totals, customer, delivery_method, delivery_date, delivery_window, note, lines, gift_code, discount_percent, gift_str_qty } = req.body as {
+    const { cart, totals: clientTotals, customer = {}, delivery_date, delivery_window, note, gift_code } = (req.body || {}) as {
       cart: Record<string, number>;
       totals: any;
-      customer: { name: string; email: string; phone: string; address: string };
+      customer?: { name?: string; email?: string; phone?: string; address?: string };
       delivery_date: string;
       delivery_window: string;
       note?: string;
@@ -37,8 +33,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       delivery_method?: "delivery";
     };
 
-    if (!cart || !totals) {
-      return res.status(400).json({ error: "Missing required checkout data." });
+    if (!isValidCart(cart)) {
+      return res.status(400).json({ error: "Invalid basket. Please refresh the shop and try again." });
     }
 
     // ---- Gift code (client-side codes only: YOY25 free bottle). ----
@@ -47,21 +43,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const giftCode = String(gift_code || "").trim().toUpperCase();
     const validGiftStrQty = giftCode === "YOY25" ? 1 : 0;
 
-    // Amounts. merchTotal alrebank holidays may shift your dispatch dayady includes 7-for-6 bundle pricing (pre-code-discount).
-    const merchTotal = Number(totals.merchTotal || 0);
-    const deliveryFee = Number(totals.deliveryFee || 0);
-    const merchPence = poundsToPence(merchTotal);
-    const deliveryPence = poundsToPence(deliveryFee);
+    // Always price the quantities on the server. Browser totals may be stale
+    // (for example, a tab left open before a price change) or altered.
+    const totals = computeTotals(cart, validGiftStrQty);
+    const { merchPence, deliveryPence, totalPence } = totals;
 
-    if (merchPence < 50) {
-      return res.status(400).json({ error: "Total too small." });
+    if (totals.bottles < MIN_ORDER_BOTTLES || !Number.isSafeInteger(totalPence) || totalPence > 99_999_999) {
+      return res.status(400).json({ error: "Please order at least 3 bottles and check your quantities." });
     }
 
-    // Lines: either provided from client (preferred), or fallback to ids
-    const orderLines: string[] =
-      Array.isArray(lines) && lines.length
-        ? lines
-        : Object.entries(cart).map(([id, qty]) => `${id} × ${qty}`);
+    const orderLines = totals.items.map(({ name, qty }) => `${name} × ${qty}`);
+    if (validGiftStrQty) orderLines.push(`STR × 1 (FREE — ${giftCode})`);
 
     const orderId = `YOY-${Date.now().toString().slice(-6)}`;
 
@@ -85,10 +77,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       bottles: String(totals.qtyTotal ?? ""),
       plain_qty: String(totals.plainQty ?? ""),
       flav_qty: String(totals.flavQty ?? ""),
-      plain_bundles: String(totals.plainBundles ?? ""),
-      flav_bundles: String(totals.flavBundles ?? ""),
-      plain_remainder: String(totals.plainRemainder ?? ""),
-      flav_remainder: String(totals.flavRemainder ?? ""),
+      plain_bundles: "0",
+      flav_bundles: "0",
+      plain_remainder: String(totals.plainQty),
+      flav_remainder: String(totals.flavQty),
       merchandise_total: String(totals.merchTotal ?? ""),
       delivery_fee: String(totals.deliveryFee ?? ""),
       // NOTE: pre-discount total. Actual paid amount is read from the
@@ -100,7 +92,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       order_id: orderId,
       payment_provider: "stripe",
-      yoghurt_strain: String(totals.deliveryBrand || ""),
+      yoghurt_strain: String(clientTotals?.deliveryBrand || ""),
     };
 
     const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;

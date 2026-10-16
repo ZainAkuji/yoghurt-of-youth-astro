@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Stripe from "stripe";
+import { subscriptionWeeklyPence } from "../../lib/pricing.js";
 
 // MUST MATCH src/config/dispatch.ts
 const SUBSCRIPTION_DAY = 1; // Thursday
@@ -84,7 +85,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!TIERS.includes(tierStr as any)) return res.status(400).json({ error: "Invalid tier" });
     if (!FLAVOURS.includes(String(planKey) as any)) return res.status(400).json({ error: "Invalid plan" });
 
-    const price = getPriceId(String(planKey), tierStr);
+    // Reuse the existing subscription Product, but price NEW subscriptions
+    // from the same rules as the shop. Existing subscriptions keep their Price.
+    const previousPrice = await stripe.prices.retrieve(getPriceId(String(planKey), tierStr));
+    const product = typeof previousPrice.product === "string"
+      ? previousPrice.product
+      : previousPrice.product.id;
+    const weeklyPence = subscriptionWeeklyPence(String(planKey), tierStr);
     
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -92,7 +99,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
-      line_items: [{ price, quantity: 1 }],
+      line_items: [{
+        price_data: {
+          currency: "gbp",
+          product,
+          unit_amount: weeklyPence,
+          recurring: { interval: "week", interval_count: 1 },
+        },
+        quantity: 1,
+      }],
       phone_number_collection: { enabled: true },
       billing_address_collection: "required",
       shipping_address_collection: { allowed_countries: ["GB"] },

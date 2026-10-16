@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import { PLAIN_PRICE_PENCE, FREE_DELIVERY_BOTTLES } from "../../lib/pricing";
 import Header from "../components/Header.tsx";
 import Footer from "../components/Footer.astro";
 import CartDrawer from "../components/CartDrawer.tsx";
@@ -90,39 +91,39 @@ const websiteSchema = {
     <div class="yoy-banner">
       <div class="yoy-banner-track">
         <span class="yoy-banner-content">
-          <span>7 for the price of 6</span><span class="dot">·</span>
+          <span>Yoghurt from £{(PLAIN_PRICE_PENCE / 100).toFixed(2)}</span><span class="dot">·</span>
           <span>Subscribe &amp; save</span><span class="dot">·</span>
-          <span>Free delivery at 10 bottles</span><span class="dot">·</span>
+          <span>Free delivery at {FREE_DELIVERY_BOTTLES} bottles</span><span class="dot">·</span>
         </span>
         <span class="yoy-banner-content" aria-hidden="true">
-          <span>7 for the price of 6</span><span class="dot">·</span>
+          <span>Yoghurt from £{(PLAIN_PRICE_PENCE / 100).toFixed(2)}</span><span class="dot">·</span>
           <span>Subscribe &amp; save</span><span class="dot">·</span>
-          <span>Free delivery at 10 bottles</span><span class="dot">·</span>
+          <span>Free delivery at {FREE_DELIVERY_BOTTLES} bottles</span><span class="dot">·</span>
         </span>
         <span class="yoy-banner-content" aria-hidden="true">
-          <span>7 for the price of 6</span><span class="dot">·</span>
+          <span>Yoghurt from £{(PLAIN_PRICE_PENCE / 100).toFixed(2)}</span><span class="dot">·</span>
           <span>Subscribe &amp; save</span><span class="dot">·</span>
-          <span>Free delivery at 10 bottles</span><span class="dot">·</span>
+          <span>Free delivery at {FREE_DELIVERY_BOTTLES} bottles</span><span class="dot">·</span>
         </span>
         <span class="yoy-banner-content" aria-hidden="true">
-          <span>7 for the price of 6</span><span class="dot">·</span>
+          <span>Yoghurt from £{(PLAIN_PRICE_PENCE / 100).toFixed(2)}</span><span class="dot">·</span>
           <span>Subscribe &amp; save</span><span class="dot">·</span>
-          <span>Free delivery at 10 bottles</span><span class="dot">·</span>
+          <span>Free delivery at {FREE_DELIVERY_BOTTLES} bottles</span><span class="dot">·</span>
         </span>
         <span class="yoy-banner-content" aria-hidden="true">
-          <span>7 for the price of 6</span><span class="dot">·</span>
+          <span>Yoghurt from £{(PLAIN_PRICE_PENCE / 100).toFixed(2)}</span><span class="dot">·</span>
           <span>Subscribe &amp; save</span><span class="dot">·</span>
-          <span>Free delivery at 10 bottles</span><span class="dot">·</span>
+          <span>Free delivery at {FREE_DELIVERY_BOTTLES} bottles</span><span class="dot">·</span>
         </span>
         <span class="yoy-banner-content" aria-hidden="true">
-          <span>7 for the price of 6</span><span class="dot">·</span>
+          <span>Yoghurt from £{(PLAIN_PRICE_PENCE / 100).toFixed(2)}</span><span class="dot">·</span>
           <span>Subscribe &amp; save</span><span class="dot">·</span>
-          <span>Free delivery at 10 bottles</span><span class="dot">·</span>
+          <span>Free delivery at {FREE_DELIVERY_BOTTLES} bottles</span><span class="dot">·</span>
         </span>
         <span class="yoy-banner-content" aria-hidden="true">
-          <span>7 for the price of 6</span><span class="dot">·</span>
+          <span>Yoghurt from £{(PLAIN_PRICE_PENCE / 100).toFixed(2)}</span><span class="dot">·</span>
           <span>Subscribe &amp; save</span><span class="dot">·</span>
-          <span>Free delivery at 10 bottles</span><span class="dot">·</span>
+          <span>Free delivery at {FREE_DELIVERY_BOTTLES} bottles</span><span class="dot">·</span>
         </span>
       </div>
     </div>

@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Shop from "../components/Shop.tsx";
+import { PLAIN_PRICE_PENCE, FLAVOURED_PRICE_PENCE } from "../../lib/pricing";
 
 const productSchema = {
   "@context": "https://schema.org",
@@ -16,8 +17,8 @@ const productSchema = {
     "@type": "AggregateOffer",
     "priceCurrency": "GBP",
     "offerCount": 4,
-    "lowPrice": "2.80",
-    "highPrice": "2.90",
+    "lowPrice": (PLAIN_PRICE_PENCE / 100).toFixed(2),
+    "highPrice": (FLAVOURED_PRICE_PENCE / 100).toFixed(2),
     "availability": "https://schema.org/InStock",
     "url": "https://yoghurtofyouth.co.uk/shop"
   }

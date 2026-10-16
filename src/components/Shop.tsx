@@ -1,3 +1,4 @@
+import { computeTotals, SUB_PRICING, PLAIN_PRICE_PENCE, FLAVOURED_PRICE_PENCE, FREE_DELIVERY_BOTTLES, SMALL_DELIVERY_PENCE, STANDARD_DELIVERY_PENCE } from "../../lib/pricing";
 import React, { useEffect, useMemo, useState } from "react";
 import { useStore } from "@nanostores/react";
 import {
@@ -22,32 +23,6 @@ import {
 const gbp = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
 const cn = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(" ");
-
-// ---------- One-off pricing (stepper) ----------
-function deliveryForQty(n: number) {
-  if (n <= 0) return 0;
-  if (n <= 4) return 3.5;
-  if (n <= 9) return 4.95;
-  return 0;
-}
-
-// 7-for-6 across the whole basket; free bottles are the cheapest present.
-function computeStepper(q: Record<string, number>) {
-  const plainQty = q.PLN || 0;
-  const flavQty = (q.BFC || 0) + (q.STR || 0) + (q.MNG || 0);
-  const bottles = plainQty + flavQty;
-
-  const freeTotal = Math.floor(bottles / 7);
-  const freePlain = Math.min(freeTotal, plainQty);
-  const freeFlav = freeTotal - freePlain;
-
-  const merch = (plainQty - freePlain) * 2.8 + (flavQty - freeFlav) * 2.9;
-  const fullPrice = plainQty * 2.8 + flavQty * 2.9;
-  const savings = Math.max(0, fullPrice - merch);
-  const delivery = deliveryForQty(bottles);
-
-  return { bottles, merch, savings, delivery, total: merch + delivery, freeTotal };
-}
 
 // ===================== WEEK ROTATION (date-anchored) =====================
 // Physical rotation anchor: Monday 13 July 2026 = LVLV.
@@ -114,13 +89,6 @@ export default function Shop() {
   const [subTier, setSubTier] = useState<4 | 7 | 14 | 21>(7);
   const [subFlavour, setSubFlavour] = useState<string>("PLN");
 
-  const SUB_PRICING: Record<number, { discount: number; delivery: number; plnWas: number; plnNow: number; flavWas: number; flavNow: number }> = {
-    4:  { discount: 5,  delivery: 3.5,  plnWas: 11.20, plnNow: 10.64, flavWas: 11.60, flavNow: 11.02 },
-    7:  { discount: 10, delivery: 4.95, plnWas: 16.80, plnNow: 15.12, flavWas: 17.40, flavNow: 15.66 },
-    14: { discount: 15, delivery: 0,    plnWas: 33.60, plnNow: 28.56, flavWas: 34.80, flavNow: 29.58 },
-    21: { discount: 20, delivery: 0,    plnWas: 50.40, plnNow: 40.32, flavWas: 52.20, flavNow: 41.76 },
-  };
-
   const MIX_AT: Record<number, string> = {
     4: "1 BFC, 2 STR, 1 MNG",
     7: "2 BFC, 3 STR, 2 MNG",
@@ -142,13 +110,13 @@ export default function Shop() {
   ];
 
   // ----- One-off stepper state -----
-  const s = computeStepper(stepper);
+  const s = computeTotals(stepper);
 
   // Cart + stepper — what the customer will actually pay for
   const merged: Record<string, number> = {};
   for (const [k, v] of Object.entries($cart)) merged[k] = Number(v || 0);
   for (const [k, v] of Object.entries(stepper)) merged[k] = (merged[k] || 0) + v;
-  const m = computeStepper(merged);
+  const m = computeTotals(merged);
 
   const short = Math.max(0, 3 - m.bottles);
   const canAdd = s.bottles >= 1;
@@ -160,10 +128,10 @@ export default function Shop() {
     setStepper({ PLN: n, BFC: 0, STR: 0, MNG: 0 });
 
   const FLAVOURS = [
-    { id: "PLN", name: "Plain", price: "£2.80", cls: "bg-slate-100 border-slate-300", txt: "text-slate-900", sub: "text-slate-600" },
-    { id: "BFC", name: "Black Forest Chocolate", price: "£2.90", cls: "bg-pink-100 border-amber-800", txt: "text-slate-900", sub: "text-slate-600" },
-    { id: "STR", name: "Strawberry", price: "£2.90", cls: "bg-rose-100 border-rose-300", txt: "text-slate-900", sub: "text-slate-600" },
-    { id: "MNG", name: "Mango", price: "£2.90", cls: "bg-amber-100 border-amber-300", txt: "text-slate-900", sub: "text-slate-600" },
+    { id: "PLN", name: "Plain", price: gbp(PLAIN_PRICE_PENCE / 100), cls: "bg-slate-100 border-slate-300", txt: "text-slate-900", sub: "text-slate-600" },
+    { id: "BFC", name: "Black Forest Chocolate", price: gbp(FLAVOURED_PRICE_PENCE / 100), cls: "bg-pink-100 border-amber-800", txt: "text-slate-900", sub: "text-slate-600" },
+    { id: "STR", name: "Strawberry", price: gbp(FLAVOURED_PRICE_PENCE / 100), cls: "bg-rose-100 border-rose-300", txt: "text-slate-900", sub: "text-slate-600" },
+    { id: "MNG", name: "Mango", price: gbp(FLAVOURED_PRICE_PENCE / 100), cls: "bg-amber-100 border-amber-300", txt: "text-slate-900", sub: "text-slate-600" },
   ];
 
   const bump = (id: string, d: number) =>
@@ -171,7 +139,7 @@ export default function Shop() {
 
   function addStepperToCart() {
     for (const [id, n] of Object.entries(stepper)) if (n > 0) storeAddQty(id, n);
-    trackAddToCart("Mixed", s.merch, s.bottles);
+    trackAddToCart("Mixed", s.merchTotal, s.bottles);
     setStepper({ PLN: 0, BFC: 0, STR: 0, MNG: 0 });
   }
 
@@ -275,7 +243,7 @@ export default function Shop() {
               <div className="mt-5 ml-3">
                 <div className="flex items-center gap-3 flex-wrap">
                   <span className="text-3xl font-bold text-slate-900">
-                    {buyMode === "subscribe" ? gbp(subNow) : "£2.80"}
+                    {buyMode === "subscribe" ? gbp(subNow) : gbp(PLAIN_PRICE_PENCE / 100)}
                   </span>
                   {buyMode === "subscribe" && (
                     <>
@@ -316,7 +284,7 @@ export default function Shop() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-slate-900">One-time purchase</span>
-                    <span className="text-sm font-bold text-slate-900">from £2.80 per bottle</span>
+                    <span className="text-sm font-bold text-slate-900">from {gbp(PLAIN_PRICE_PENCE / 100)} per bottle</span>
                   </div>
                 </button>
                 <button
@@ -326,7 +294,7 @@ export default function Shop() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-slate-900">Subscribe &amp; Save</span>
-                    <span className="text-sm font-bold text-slate-900">from £10.64 per week</span>
+                    <span className="text-sm font-bold text-slate-900">from {gbp(SUB_PRICING[4].plnNow + SUB_PRICING[4].delivery)} per week</span>
                   </div>
                   <ul className="mt-2 space-y-0.5 text-xs text-slate-600">
                     <li>✓ Discount on every order</li>
@@ -360,16 +328,10 @@ export default function Shop() {
                     ))}
                   </div>
 
-                  {/* 7-for-6 hook */}
+                  {/* Minimum order */}
                   <div className="mt-3 ml-3 flex items-stretch justify-between gap-3">
                     <div>
                       <p className="text-sm text-slate-600">Minimum order of 3 bottles</p>
-                      <p className="mt-0.5 text-sm font-semibold text-slate-900">
-                        Buy 7 for the price of 6
-                        {m.freeTotal > 0 && (
-                          <span className="text-emerald-600"> · {m.freeTotal} free bottle{m.freeTotal > 1 ? "s" : ""}</span>
-                        )}
-                      </p>
                     </div>
                     <button
                       type="button"
@@ -384,9 +346,9 @@ export default function Shop() {
                   <p className="mt-5 ml-3 text-sm text-slate-900">Chilled next-day delivery charge:</p>
                   <div className="mt-2 grid grid-cols-3 gap-2">
                     {[
-                      { label: "3–4 bottles", value: "£3.50", active: m.bottles >= 3 && m.bottles <= 4 },
-                      { label: "5–9 bottles", value: "£4.95", active: m.bottles >= 5 && m.bottles <= 9 },
-                      { label: "10+ bottles", value: "FREE", active: m.bottles >= 10 },
+                      { label: "3–4 bottles", value: gbp(SMALL_DELIVERY_PENCE / 100), active: m.bottles >= 3 && m.bottles <= 4 },
+                      { label: `5–${FREE_DELIVERY_BOTTLES - 1} bottles`, value: gbp(STANDARD_DELIVERY_PENCE / 100), active: m.bottles >= 5 && m.bottles < FREE_DELIVERY_BOTTLES },
+                      { label: `${FREE_DELIVERY_BOTTLES}+ bottles`, value: "FREE", active: m.bottles >= FREE_DELIVERY_BOTTLES },
                     ].map((d) => (
                       <div key={d.label}
                         className={cn("rounded-xl border-2 px-2 py-2 text-center transition",
@@ -400,13 +362,10 @@ export default function Shop() {
                   {/* Running total */}
                   <div className="mt-5 rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm">
                     <div className="flex justify-between text-slate-700">
-                      <span>{m.bottles} bottle{m.bottles === 1 ? "" : "s"} total</span><span>{gbp(m.merch)}</span>
+                      <span>{m.bottles} bottle{m.bottles === 1 ? "" : "s"} total</span><span>{gbp(m.merchTotal)}</span>
                     </div>
-                    {m.savings > 0 && (
-                      <div className="flex justify-between text-emerald-600"><span>7 for 6 saving</span><span>−{gbp(m.savings)}</span></div>
-                    )}
                     <div className="flex justify-between text-slate-700">
-                      <span>Delivery</span><span>{m.bottles >= 10 ? "FREE" : gbp(m.delivery)}</span>
+                      <span>Delivery</span><span>{m.bottles >= FREE_DELIVERY_BOTTLES ? "FREE" : gbp(m.deliveryFee)}</span>
                     </div>
                     <div className="flex justify-between font-bold text-slate-900 text-base mt-1 pt-2 border-t border-slate-200">
                       <span>Total</span><span>{gbp(m.total)}</span>
@@ -437,7 +396,7 @@ export default function Shop() {
                       className={cn("w-full rounded-2xl px-6 py-3.5 text-sm font-bold transition flex items-center justify-center gap-2",
                         canAdd ? "bg-slate-900 text-white hover:bg-slate-700" : "bg-slate-100 text-slate-400 cursor-not-allowed")}>
                       <span>Add to basket</span>
-                      {canAdd && <><span className="opacity-50">·</span><span>{gbp(s.merch)}</span></>}
+                      {canAdd && <><span className="opacity-50">·</span><span>{gbp(s.merchTotal)}</span></>}
                     </button>
                     <button type="button" disabled={!canPay}
                       onClick={() => { if (s.bottles > 0) addStepperToCart(); window.location.href = "/checkout"; }}
@@ -471,10 +430,7 @@ export default function Shop() {
                           <p className="text-base font-bold text-slate-900">{t}</p>
                           <p className="text-[11px] text-slate-600">bottles</p>
                           <p className="mt-1 text-xs font-semibold text-emerald-600">Save {p.discount}%</p>
-                          {t === 7 && <p className="text-xs font-semibold text-emerald-600">1 bottle free</p>}
-                          {t === 14 && <p className="text-xs font-semibold text-emerald-600">2 bottles free</p>}
                           {t === 14 && <p className="text-xs font-semibold text-emerald-600">Free delivery</p>}
-                          {t === 21 && <p className="text-xs font-semibold text-emerald-600">3 bottles free</p>}
                           {t === 21 && <p className="text-xs font-semibold text-emerald-600">Free delivery</p>}
                         </button>
                       );
@@ -602,12 +558,12 @@ export default function Shop() {
               {[
                 {
                   id: "flavours",
-                  title: "Flavours & bundles",
+                  title: "Flavours & pricing",
                   body: (
                     <>
                       <p>Choose from <strong>PLN</strong> (plain), <strong>BFC</strong> (black forest chocolate), <strong>STR</strong> (strawberry), and <strong>MNG</strong> (mango).</p>
                       <p className="mt-2">Order any quantity from <strong>3 bottles</strong> upwards, mixing flavours however you like.</p>
-                      <p className="mt-2">Buy any 7 bottles for the price of 6, applied automatically across your whole basket.</p>
+                      <p className="mt-2">Plain yoghurt is <strong>{gbp(PLAIN_PRICE_PENCE / 100)}</strong> per bottle; all flavoured yoghurts are <strong>{gbp(FLAVOURED_PRICE_PENCE / 100)}</strong> per bottle.</p>
                     </>
                   ),
                 },
@@ -616,7 +572,7 @@ export default function Shop() {
                   title: "Delivery & dispatch",
                   body: (
                     <>
-                      <p>Chilled next-day delivery: <strong>£3.50</strong> on 3–4 bottles, <strong>£4.95</strong> on 5–9, and <strong>free</strong> on 10 or more.</p>
+                      <p>Chilled next-day delivery: <strong>{gbp(SMALL_DELIVERY_PENCE / 100)}</strong> on 3–4 bottles, <strong>{gbp(STANDARD_DELIVERY_PENCE / 100)}</strong> on 5–{FREE_DELIVERY_BOTTLES - 1}, and <strong>free</strong> on {FREE_DELIVERY_BOTTLES} or more.</p>
                       <p className="mt-2">We ferment the day before dispatch and send orders on <strong>Mondays</strong> and <strong>Thursdays</strong> via next-day delivery. Bank holidays may shift your dispatch day. The date shown at checkout is always the one we'll use.</p>
                     </>
                   ),

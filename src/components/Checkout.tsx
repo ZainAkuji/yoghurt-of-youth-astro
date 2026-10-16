@@ -1,3 +1,4 @@
+import { computeTotals, PRODUCTS, SUB_PRICING, FREE_DELIVERY_BOTTLES, MIN_ORDER_BOTTLES } from "../../lib/pricing";
 import React, { useEffect, useMemo, useState } from "react";
 import { useStore } from "@nanostores/react";
 import { cart as cartStore } from "../stores/cart";
@@ -16,48 +17,6 @@ import {
 const gbp = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
 const cn = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(" ");
-
-const PRODUCTS = [
-  { id: "PLN", name: "PLN", price: 2.8, size: "250 mL" },
-  { id: "BFC", name: "BFC", price: 2.9, size: "250 mL" },
-  { id: "STR", name: "STR", price: 2.9, size: "250 mL" },
-  { id: "MNG", name: "MNG", price: 2.9, size: "250 mL" },
-];
-
-const DELIVERY = (n: number) => (n <= 0 ? 0 : n <= 4 ? 3.5 : n <= 9 ? 4.95 : 0);
-
-function computeTotals(cart: Record<string, number>, discountPercent = 0, giftStrQty = 0) {
-  const items = Object.entries(cart).map(([id, qty]) => {
-    const p = PRODUCTS.find((x) => x.id === id);
-    return p ? { ...p, qty } : null;
-  }).filter(Boolean) as Array<(typeof PRODUCTS)[number] & { qty: number }>;
-
-  const plainQty = items.filter(i => i.id === "PLN").reduce((s, i) => s + i.qty, 0);
-  const flavQty  = items.filter(i => i.id !== "PLN").reduce((s, i) => s + i.qty, 0);
-  const bottles  = plainQty + flavQty;
-  const qtyTotal = bottles + (giftStrQty || 0);
-
-  const freeTotal = Math.floor(bottles / 7);
-  const freePlain = Math.min(freeTotal, plainQty);
-  const freeFlav  = freeTotal - freePlain;
-
-  const merchTotal = (plainQty - freePlain) * 2.8 + (flavQty - freeFlav) * 2.9;
-  const fullPrice  = plainQty * 2.8 + flavQty * 2.9;
-  const savings    = Math.max(0, fullPrice - merchTotal);
-  const deliveryFee = DELIVERY(bottles);
-
-  const discount = discountPercent > 0 ? Math.round(merchTotal * discountPercent) / 100 : 0;
-  const total = merchTotal - discount + deliveryFee;
-
-  return { items, qtyTotal, total, savings, merchTotal, deliveryFee, discount, plainQty, flavQty, freeTotal, bottles };
-}
-
-const SUB_PRICING: Record<string, { discount: number; delivery: number; plnWas: number; plnNow: number; flavWas: number; flavNow: number }> = {
-  "4":  { discount: 5,  delivery: 3.5,  plnWas: 11.20, plnNow: 10.64, flavWas: 11.60, flavNow: 11.02 },
-  "7":  { discount: 10, delivery: 4.95, plnWas: 16.80, plnNow: 15.12, flavWas: 17.40, flavNow: 15.66 },
-  "14": { discount: 15, delivery: 0,    plnWas: 33.60, plnNow: 28.56, flavWas: 34.80, flavNow: 29.58 },
-  "21": { discount: 20, delivery: 0,    plnWas: 50.40, plnNow: 40.32, flavWas: 52.20, flavNow: 41.76 },
-};
 
 const MIX_CONTENTS: Record<string, string> = {
   "4": "1 BFC, 2 STR, 1 MNG",
@@ -114,22 +73,20 @@ export default function Checkout() {
   const [giftCode, setGiftCode] = useState("");
 
   const normalizedGiftCode = giftCode.trim().toUpperCase();
-  const discountPercent = normalizedGiftCode === "MINUS10" ? 10 : 0;
   const giftStrQty = normalizedGiftCode === "YOY25" ? 1 : 0;
 
-  const totalsWithGift = useMemo(() => computeTotals(cart, discountPercent, giftStrQty), [cart, discountPercent, giftStrQty]);
-  const { qtyTotal, total, savings, deliveryFee, merchTotal, freeTotal } = totalsWithGift;
+  const totalsWithGift = useMemo(() => computeTotals(cart, giftStrQty), [cart, giftStrQty]);
+  const { qtyTotal, total, deliveryFee, merchTotal, bottles } = totalsWithGift;
 
   const lines = Object.entries(cart).map(([id, qty]) => {
     const p = PRODUCTS.find((p) => p.id === id);
     return `${p?.name ?? id} × ${qty}`;
   });
-  if (discountPercent > 0) lines.push(`10% discount applied (${normalizedGiftCode})`);
   if (giftStrQty > 0) lines.push(`STR × 1 (FREE — ${normalizedGiftCode})`);
 
   const normalizedPostcode = postcode.trim().toUpperCase();
   const fullAddress = [streetAddress.trim(), townCity.trim(), normalizedPostcode].filter(Boolean).join(", ");
-  const valid = isSubscription ? true : (qtyTotal >= 3 && !!date);
+  const valid = isSubscription ? true : (bottles >= MIN_ORDER_BOTTLES && !!date);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -214,9 +171,9 @@ export default function Checkout() {
         if (data?.url) window.location.href = data.url; else setError("Stripe subscription checkout failed.");
         return;
       }
-      const draft = { cart, totals: totalsWithGift, customer, delivery_method:"delivery", delivery_date_iso:date, delivery_date:formattedDate, delivery_window:deliveryWindow, note, lines, gift_code:normalizedGiftCode, discount_percent:discountPercent, gift_str_qty:giftStrQty, savedAt:Date.now(), provider:"stripe" };
+      const draft = { cart, totals: totalsWithGift, customer, delivery_method:"delivery", delivery_date_iso:date, delivery_date:formattedDate, delivery_window:deliveryWindow, note, lines, gift_code:normalizedGiftCode, gift_str_qty:giftStrQty, savedAt:Date.now(), provider:"stripe" };
       sessionStorage.setItem("yoy_checkout_draft", JSON.stringify(draft));
-      const res = await fetch("/api/stripe/create-checkout-session", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ cart, totals: totalsWithGift, lines, customer, delivery_method:"delivery", delivery_date:formattedDate, delivery_window:deliveryWindow, note, gift_code:normalizedGiftCode, discount_percent:discountPercent, gift_str_qty:giftStrQty }) });
+      const res = await fetch("/api/stripe/create-checkout-session", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ cart, totals: totalsWithGift, lines, customer, delivery_method:"delivery", delivery_date:formattedDate, delivery_window:deliveryWindow, note, gift_code:normalizedGiftCode, gift_str_qty:giftStrQty }) });
       const text = await res.text(); let data:any={}; try{data=JSON.parse(text);}catch{}
       if (!res.ok) { setError(data?.error || "Checkout failed (server error)."); return; }
       if (data?.url) window.location.href = data.url; else setError("Stripe checkout failed.");
@@ -290,9 +247,7 @@ export default function Checkout() {
           <div className="mt-3 pt-3 border-t border-slate-200 space-y-1">
             <div className="flex justify-between"><span>Bottles</span><span>{qtyTotal}</span></div>
             <div className="flex justify-between"><span>Subtotal</span><span>{gbp(merchTotal)}</span></div>
-            {savings > 0 && <div className="flex justify-between text-emerald-600"><span>7 for 6 ({freeTotal} free)</span><span>−{gbp(savings)}</span></div>}
-            <div className="flex justify-between"><span>Delivery</span><span>{qtyTotal >= 10 ? "FREE" : gbp(deliveryFee)}</span></div>
-            {totalsWithGift.discount > 0 && <div className="flex justify-between text-emerald-600"><span>{normalizedGiftCode} (10% off)</span><span>−{gbp(totalsWithGift.discount)}</span></div>}
+            <div className="flex justify-between"><span>Delivery</span><span>{bottles >= FREE_DELIVERY_BOTTLES ? "FREE" : gbp(deliveryFee)}</span></div>
             <div className="flex justify-between font-bold text-slate-900 text-base pt-1"><span>Total due</span><span>{gbp(total)}</span></div>
           </div>
         </div>
