@@ -9,9 +9,11 @@ The website reads these values from Google; they are not hardcoded.
 - The rating beside the purchase options becomes live and links down to the reviews.
 - A Customer reviews section appears below the three information accordions.
 - Six review cards appear initially. Show more reveals the remaining cards.
-- Cards show the reviewer's public name/photo, stars, date and complete review text.
-- All ratings returned by Google are included, with the most recently updated first.
-- Up to 50 reviews are fetched; a Google link gives access to the complete listing.
+- Cards show the reviewer's public name/photo, stars and date. Long text expands with Read full review; existing Google business replies can also be expanded.
+- All ratings returned by Google are included. The default relevance ranking uses detail and recency, never the number of stars. This is our site's ranking; Google Business Profile does not return a relevance ranking.
+- Visitors can sort by newest, oldest, highest rating or lowest rating, search text/names, and click rating bars to filter.
+- The server follows Google's pages (50 reviews per page), up to 1,000 reviews within the request deadline. Counts include reviews with no written text.
+- If the loaded count differs from Google's total, the distribution and filters are explicitly labelled as applying to the loaded set. The overall average/count still come from Google.
 - The server caches the response for about one hour. New reviews do not require a deployment.
 - If Google is unavailable, visitors see a link to read reviews on Google.
 - A privacy notice explains the review display and profile images.

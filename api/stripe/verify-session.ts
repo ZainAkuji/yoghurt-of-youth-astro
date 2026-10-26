@@ -1,3 +1,4 @@
+import { subscriptionDispatchDetails } from "../../lib/dispatch.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Stripe from "stripe";
 
@@ -19,7 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const paid =
       session.payment_status === "paid" ||
-      session.mode === "subscription";
+      (session.mode === "subscription" && session.status === "complete");
 
     const order_id =
       session.metadata?.orderId ||
@@ -39,7 +40,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const customer_name = String(cd.name || shipName || "");
     const customer_address = safeJoinAddress(shippingAddr) || safeJoinAddress(cd.address) || "";
 
-    return res.status(200).json({ paid, order_id, customer_name, customer_address });
+    // Return the server-confirmed date; sessionStorage can be stale at a cutoff.
+    let dispatch_iso = session.metadata?.dispatch_iso || session.metadata?.first_dispatch_iso || "";
+    let dispatch_weekday = session.metadata?.dispatch_weekday || "";
+    if (paid && session.mode === "subscription" && !dispatch_iso && session.subscription) {
+      const sub = typeof session.subscription === "string"
+        ? await stripe.subscriptions.retrieve(session.subscription) : session.subscription;
+      const schedule = subscriptionDispatchDetails(sub.metadata, sub.trial_end, sub.billing_cycle_anchor);
+      dispatch_iso = schedule.dispatchISO;
+      dispatch_weekday = schedule.weekday;
+    }
+    return res.status(200).json({ paid, order_id, customer_name, customer_address, dispatch_iso, dispatch_weekday });
   } catch (e: any) {
     console.error(e);
     return res.status(500).json({ error: e.message || "Stripe verify failed" });

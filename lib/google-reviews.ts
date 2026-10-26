@@ -55,6 +55,8 @@ function publicData(raw: JsonObject, mapsUrl: string, fetchedAt: number): Google
     if (!rating || typeof review.reviewId !== "string") throw new ReviewsError("INVALID_GOOGLE_RESPONSE");
     const date = typeof review.createTime === "string" && Number.isFinite(Date.parse(review.createTime))
       ? review.createTime : null;
+    const reply = review.reviewReply && typeof review.reviewReply === "object"
+      ? review.reviewReply as JsonObject : {};
     return {
       id: review.reviewId,
       author: reviewer.isAnonymous === true ? "Anonymous Google reviewer"
@@ -63,6 +65,10 @@ function publicData(raw: JsonObject, mapsUrl: string, fetchedAt: number): Google
       rating,
       text: typeof review.comment === "string" ? review.comment : "",
       date,
+      reply: typeof reply.comment === "string" && reply.comment.trim() ? {
+        text: reply.comment,
+        date: typeof reply.updateTime === "string" && Number.isFinite(Date.parse(reply.updateTime)) ? reply.updateTime : null,
+      } : null,
     };
   });
   return {
@@ -123,7 +129,7 @@ export function createGoogleReviewsService(
       if (failure?.key === key && now() < failure.until) return unavailable("REVIEWS_UNAVAILABLE");
       if (!pending || pending.key !== key) {
         const promise = (async () => {
-          // One deadline covers the token exchange and both read-only Google requests.
+          // One deadline covers token exchange, location lookup and review pages.
           const signal = AbortSignal.timeout(8000);
           const token = await googleJson("https://oauth2.googleapis.com/token", {
             method: "POST",
@@ -149,6 +155,28 @@ export function createGoogleReviewsService(
               options, "LOCATION",
             ).catch(() => ({} as JsonObject)),
           ]);
+          // Google returns at most 50 per page. Include rating-only reviews too.
+          // Cap work at 1,000 reviews; the UI labels a partial set explicitly.
+          if (!Array.isArray(raw.reviews ?? [])) throw new ReviewsError("INVALID_GOOGLE_RESPONSE");
+          const reviews = [...(raw.reviews as unknown[] || [])];
+          const seenTokens = new Set<string>();
+          let pageToken = raw.nextPageToken;
+          for (let page = 1; pageToken && page < 20; page++) {
+            if (typeof pageToken !== "string" || seenTokens.has(pageToken)) throw new ReviewsError("INVALID_PAGE_TOKEN");
+            seenTokens.add(pageToken);
+            const next = await googleJson(
+              `https://mybusiness.googleapis.com/v4/accounts/${accountId}/locations/${locationId}/reviews?pageSize=50&orderBy=updateTime%20desc&pageToken=${encodeURIComponent(pageToken)}`,
+              options, "REVIEWS",
+            );
+            if (!Array.isArray(next.reviews ?? [])) throw new ReviewsError("INVALID_GOOGLE_RESPONSE");
+            reviews.push(...(next.reviews as unknown[] || []));
+            pageToken = next.nextPageToken;
+          }
+          // Deduplicate if a review moved between pages while Google was read.
+          raw.reviews = [...new Map(reviews.map(entry => {
+            const review = object(entry);
+            return [review.reviewId, review];
+          })).values()];
           const metadata = location.metadata && typeof location.metadata === "object"
             ? location.metadata as JsonObject : {};
           const mapsUrl = googleUrl(metadata.mapsUri) || GOOGLE_REVIEWS_FALLBACK_URL;

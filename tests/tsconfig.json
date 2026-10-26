@@ -8,7 +8,11 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmitOnError": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["pricing.test.ts"]
+  "include": [
+    "*.test.ts"
+  ]
 }

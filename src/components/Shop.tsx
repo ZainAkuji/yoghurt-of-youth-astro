@@ -9,56 +9,25 @@ import {
 import { sendCAPIEvent, newEventId } from "../capi";
 import GoogleReviews, { GoogleReviewSummary, useGoogleReviews } from "./GoogleReviews";
 import {
-  SUBSCRIPTION_DAY_NAME,
-  SUBSCRIPTION_DAY,
-  toISODate,
   formatDateUK,
   weekdayFromISO,
-  nextDispatchISO,
-  nextSubscriptionISO,
+  addCalendarDays,
+  strainForDispatch,
   dispatchDelayed,
 } from "../config/dispatch";
+import { useDispatchDate } from "../hooks/useDispatchDate";
 
 // ---------- Utils ----------
 const gbp = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
 const cn = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(" ");
 
-// ===================== WEEK ROTATION (date-anchored) =====================
-// Physical rotation anchor: Monday 13 July 2026 = LVLV.
-// Cycle order: PRCXN -> SPCTRL -> LVLV -> (repeat)
-const ROTATION = ["PRCXN", "SPCTRL", "LVLV"];
-
-// Strain for a given Monday date, anchored to 13 Jul 2026 = LVLV (index 2).
-function strainForMonday(monday: Date): string {
-  const anchor = new Date(2026, 6, 13); // 13 July 2026 (month 0-indexed: 6 = July)
-  anchor.setHours(0, 0, 0, 0);
-  const m = new Date(monday);
-  m.setHours(0, 0, 0, 0);
-  const weeks = Math.round((m.getTime() - anchor.getTime()) / (7 * 86400000));
-  const idx = (((2 + weeks) % 3) + 3) % 3; // anchor is index 2 (LVLV)
-  return ROTATION[idx];
-}
-
-// The Monday date whose batch an order maps to, per mode.
-function mondayForMode(mode: "oneoff" | "subscribe"): Date {
-  const iso = mode === "subscribe" ? nextSubscriptionISO() : nextDispatchISO();
-  const [y, mo, d] = iso.split("-").map(Number);
-  const dispatch = new Date(y, mo - 1, d);
-  // Rotation is anchored to Mondays — step back to the Monday of that week
-  const back = (dispatch.getDay() - 1 + 7) % 7;
-  dispatch.setDate(dispatch.getDate() - back);
-  return dispatch;
-}
-
-function getBrandForMode(mode: "oneoff" | "subscribe"): string {
-  return strainForMonday(mondayForMode(mode));
-}
-
 // ===================== MAIN SHOP ISLAND =====================
-export default function Shop() {
+export default function Shop({ initialDispatchISO }: { initialDispatchISO: string }) {
   const $cart = useStore(cartStore);
   const googleReviews = useGoogleReviews();
+  const dispatchISO = useDispatchDate(initialDispatchISO);
+  const subscriptionWeekday = weekdayFromISO(dispatchISO);
   const [nutritionModal, setNutritionModal] = useState<null | { title: string; src: string }>(null);
 
   // ----- New two-column selection state -----
@@ -80,10 +49,9 @@ export default function Shop() {
     sendCAPIEvent("AddToCart", { eventId, customData: data });
   }
 
-  const thisWeekBrand = getBrandForMode(buyMode);
-  const _thisMonday = mondayForMode(buyMode);
-  const nextWeekBrand = strainForMonday(new Date(_thisMonday.getTime() + 7 * 86400000));
-  const weekAfterBrand = strainForMonday(new Date(_thisMonday.getTime() + 14 * 86400000));
+  const thisWeekBrand = strainForDispatch(dispatchISO);
+  const nextWeekBrand = strainForDispatch(addCalendarDays(dispatchISO, 7));
+  const weekAfterBrand = strainForDispatch(addCalendarDays(dispatchISO, 14));
 
   // ----- Subscription state -----
   const [subTier, setSubTier] = useState<4 | 7 | 14 | 21>(7);
@@ -374,7 +342,7 @@ export default function Shop() {
 
                   {/* Dispatch date */}
                   <p className="mt-3 ml-3 text-sm text-slate-600">
-                    Dispatch date: <strong>{formatDateUK(nextDispatchISO())} {weekdayFromISO(nextDispatchISO())}</strong>
+                    Dispatch date: <strong>{formatDateUK(dispatchISO)} {weekdayFromISO(dispatchISO)}</strong>
                   </p>
                   {dispatchDelayed("oneoff") && (
                     <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
@@ -513,11 +481,11 @@ export default function Shop() {
 
                   {/* Dispatch */}
                   <p className="mt-3 ml-3 text-sm text-slate-600">
-                    First dispatch: <strong>{formatDateUK(nextSubscriptionISO())} {SUBSCRIPTION_DAY_NAME}</strong>, then every {SUBSCRIPTION_DAY_NAME}
+                    First dispatch: <strong>{formatDateUK(dispatchISO)} {subscriptionWeekday}</strong>, then every {subscriptionWeekday}
                   </p>
                   {dispatchDelayed("subscription") && (
                     <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                      Bank holidays are affecting courier services, so your first dispatch is later than usual. Subsequent weeks follow the normal schedule.
+                      Bank holidays are affecting courier services, so your first dispatch is later than usual. Your weekly subscription will keep the weekday shown above. Later bank holidays may affect individual dispatches.
                     </p>
                   )}
 
@@ -573,7 +541,7 @@ export default function Shop() {
                   body: (
                     <>
                       <p>Chilled next-day delivery: <strong>{gbp(SMALL_DELIVERY_PENCE / 100)}</strong> on 3–4 bottles, <strong>{gbp(STANDARD_DELIVERY_PENCE / 100)}</strong> on 5–{FREE_DELIVERY_BOTTLES - 1}, and <strong>free</strong> on {FREE_DELIVERY_BOTTLES} or more.</p>
-                      <p className="mt-2">We ferment the day before dispatch and send orders on <strong>Mondays</strong> and <strong>Thursdays</strong> via next-day delivery. Bank holidays may shift your dispatch day. The date shown at checkout is always the one we'll use.</p>
+                      <p className="mt-2">We ferment the day before dispatch and send orders on <strong>Mondays</strong> and <strong>Thursdays</strong> via next-day delivery. Bank holidays may shift your dispatch day. Order before 9pm Saturday for Monday dispatch, or before 9pm Tuesday for Thursday dispatch (UK time). The date shown at checkout accounts for holidays.</p>
                     </>
                   ),
                 },
@@ -583,7 +551,8 @@ export default function Shop() {
                   body: (
                     <>
                       <p>Subscribe to <strong>4, 7, 14 or 21 bottles</strong> every week and save <strong>5%, 10%, 15% or 20%</strong>, fermented fresh before each dispatch.</p>
-                      <p className="mt-2">Your first batch is dispatched on the coming available <strong>{SUBSCRIPTION_DAY_NAME}</strong>, then every following {SUBSCRIPTION_DAY_NAME}. Bank holidays may shift your dispatch day. You'll automatically receive each week's rotating strain.</p>
+                      <p className="mt-2">Your first batch uses the same next available dispatch as a one-off order: <strong>{subscriptionWeekday}</strong>, then every following {subscriptionWeekday}. Bank holidays may shift your dispatch day. You'll automatically receive each week's rotating strain.</p>
+                      <p className="mt-2">Your first payment is scheduled for your first dispatch day, then weekly on that weekday. Your weekday stays the same after signup.</p>
                       <p className="mt-2">Pause, adjust or cancel anytime by emailing <a href="mailto:support@yoghurtofyouth.co.uk" className="underline hover:text-amber-500 transition">support@yoghurtofyouth.co.uk</a>.</p>
                     </>
                   ),

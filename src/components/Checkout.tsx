@@ -4,15 +4,11 @@ import { useStore } from "@nanostores/react";
 import { cart as cartStore } from "../stores/cart";
 import { sendCAPIEvent, newEventId } from "../capi";
 import {
-  SUBSCRIPTION_DAY_NAME,
-  SUBSCRIPTION_DAY,
-  toISODate,
   formatDateUK,
   weekdayFromISO,
-  nextDispatchISO,
-  nextSubscriptionISO,
   dispatchDelayed,
 } from "../config/dispatch";
+import { useDispatchDate } from "../hooks/useDispatchDate";
 
 const gbp = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
@@ -55,9 +51,10 @@ export default function Checkout() {
   const subNow = subPlan === "PLN" ? subP.plnNow : subP.flavNow;
   const subWas = subPlan === "PLN" ? subP.plnWas : subP.flavWas;
   const subWeekly = subNow + subP.delivery;
-  const firstISO = nextSubscriptionISO();
+  const date = useDispatchDate();
+  const firstISO = date;
+  const subscriptionWeekday = weekdayFromISO(firstISO);
   const firstText = `${formatDateUK(firstISO)} ${weekdayFromISO(firstISO)}`;
-  const date = nextDispatchISO();
   const formattedDate = formatDateUK(date);
   const deliveryWindow = "18:30–20:00";
 
@@ -165,7 +162,7 @@ export default function Checkout() {
       if (isSubscription) {
         const draft = { kind:"subscription", plan:{ key: subPlan, tier: subTier, weekly: subWeekly }, customer, note, first_delivery_iso:firstISO, first_delivery_text:firstText, delivery_window:"18:30–20:00", savedAt:Date.now(), provider:"stripe_sub" };
         sessionStorage.setItem("yoy_checkout_draft", JSON.stringify(draft));
-        const res = await fetch("/api/stripe/create-subscription-session", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ planKey: subPlan, tier: subTier, customer, note }) });
+        const res = await fetch("/api/stripe/create-subscription-session", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ planKey: subPlan, tier: subTier, customer, note, expected_dispatch_iso: firstISO }) });
         const text = await res.text(); let data:any={}; try{data=JSON.parse(text);}catch{}
         if (!res.ok) { setError(data?.error || "Subscription checkout failed (server error)."); return; }
         if (data?.url) window.location.href = data.url; else setError("Stripe subscription checkout failed.");
@@ -173,7 +170,7 @@ export default function Checkout() {
       }
       const draft = { cart, totals: totalsWithGift, customer, delivery_method:"delivery", delivery_date_iso:date, delivery_date:formattedDate, delivery_window:deliveryWindow, note, lines, gift_code:normalizedGiftCode, gift_str_qty:giftStrQty, savedAt:Date.now(), provider:"stripe" };
       sessionStorage.setItem("yoy_checkout_draft", JSON.stringify(draft));
-      const res = await fetch("/api/stripe/create-checkout-session", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ cart, totals: totalsWithGift, lines, customer, delivery_method:"delivery", delivery_date:formattedDate, delivery_window:deliveryWindow, note, gift_code:normalizedGiftCode, gift_str_qty:giftStrQty }) });
+      const res = await fetch("/api/stripe/create-checkout-session", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ cart, totals: totalsWithGift, lines, customer, delivery_method:"delivery", delivery_date:formattedDate, expected_dispatch_iso: date, delivery_window:deliveryWindow, note, gift_code:normalizedGiftCode, gift_str_qty:giftStrQty }) });
       const text = await res.text(); let data:any={}; try{data=JSON.parse(text);}catch{}
       if (!res.ok) { setError(data?.error || "Checkout failed (server error)."); return; }
       if (data?.url) window.location.href = data.url; else setError("Stripe checkout failed.");
@@ -214,8 +211,10 @@ export default function Checkout() {
               : <> — including {gbp(subP.delivery)} chilled next-day delivery.</>}
           </p>
           <p className="mt-3">
-            First dispatch: <span className="font-semibold">{firstText}</span>, then every following {SUBSCRIPTION_DAY_NAME}.
+            First dispatch: <span className="font-semibold">{firstText}</span>, then every following {subscriptionWeekday}.
           </p>
+          <p className="mt-2 text-xs text-slate-500">Your first payment is scheduled for your first dispatch day, then weekly on that weekday. Delivery is normally the next day. Bank holidays may shift dispatch.</p>
+          {dispatchDelayed("subscription") && <p className="mt-2 text-sm text-amber-700">Bank holidays have moved your first dispatch to the date shown above.</p>}
         </div>
       ) : (
         <div className="mt-3 ml-3 text-sm text-slate-700">
@@ -233,6 +232,7 @@ export default function Checkout() {
         </div>
       )}
 
+      <p className="mt-3 ml-3 text-xs text-slate-500">Cutoffs: 9pm Saturday for Monday dispatch; 9pm Tuesday for Thursday dispatch (UK time). The date is reserved when you open Stripe checkout, for about 30 minutes.</p>
       <div className="mt-6">
         <input value={note} onChange={(e)=>setNote(e.target.value)} placeholder="Order note (optional)" className={inputCls} />
         {!isSubscription && (

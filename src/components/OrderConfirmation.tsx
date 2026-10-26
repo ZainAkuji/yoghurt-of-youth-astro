@@ -1,3 +1,4 @@
+import { formatDispatchDate } from "../config/dispatch";
 import React, { useEffect, useState } from "react";
 import { clearCart as storeClear } from "../stores/cart";
 
@@ -12,6 +13,7 @@ const MIX_CONTENTS: Record<string, string> = {
   "4": "1 BFC, 2 STR, 1 MNG",
   "7": "2 BFC, 3 STR, 2 MNG",
   "14": "4 BFC, 6 STR, 4 MNG",
+  "21": "6 BFC, 9 STR, 6 MNG",
 };
 
 function formatDateUK(iso: string) {
@@ -27,7 +29,7 @@ function weekdayFromISO(iso: string) {
 }
 
 type ConfirmOrder = {
-  orderId?: string; formattedDate: string; deliveryWindow: string; lines: string[];
+  orderId?: string; dispatchWeekday?: string; formattedDate: string; deliveryWindow: string; lines: string[];
   qtyTotal: number; plainQty: number; flavQty: number;
   totalText: string; totalValue: number;
   address: string; name: string;
@@ -56,7 +58,8 @@ function buildConfirmOrderFromDraft(draft: any, orderId: string): ConfirmOrder |
 
     return {
       orderId: orderId || "",
-      formattedDate: firstText || "Monday",
+      formattedDate: firstText || "See your confirmation email",
+      dispatchWeekday: firstISO ? weekdayFromISO(firstISO) : "",
       deliveryWindow: String(draft?.delivery_window || "18:30–20:00"),
       lines,
       qtyTotal: bottles,
@@ -115,6 +118,10 @@ export default function OrderConfirmation() {
         const built = buildConfirmOrderFromDraft(draft, orderId);
 
         if (!built) { setStatus("error"); return; }
+        if (data.dispatch_iso) {
+          built.formattedDate = formatDispatchDate(data.dispatch_iso);
+          built.dispatchWeekday = data.dispatch_weekday || weekdayFromISO(data.dispatch_iso);
+        }
         if (data.customer_name) built.name = data.customer_name;
         if (data.customer_address) built.address = data.customer_address;
 
@@ -223,6 +230,7 @@ export default function OrderConfirmation() {
 
         {isSub && (
           <p className="mt-6 text-slate-500 text-xs leading-relaxed">
+            {order.dispatchWeekday && <>Your subscription is dispatched and billed every {order.dispatchWeekday}. Delivery is normally the following day; bank holidays may shift dispatch. </>}
             We rotate through PRCXN, SPCTRL, and LVLV by week. Your yoghurt is fermented the day before dispatch for freshness.
           </p>
         )}

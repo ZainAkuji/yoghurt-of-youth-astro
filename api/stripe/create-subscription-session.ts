@@ -2,26 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Stripe from "stripe";
 import { subscriptionWeeklyPence } from "../../lib/pricing.js";
 
-// MUST MATCH src/config/dispatch.ts
-const SUBSCRIPTION_DAY = 1; // Thursday
-
-function toISODate(d: Date) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-// MUST MATCH BLOCKED_DISPATCH in src/config/dispatch.ts — refresh annually
-const BLOCKED_DISPATCH = new Set([
-  "2026-12-24", "2026-12-28", "2026-12-31",
-  "2027-03-25", "2027-03-29",
-  "2027-05-03", "2027-05-31", "2027-08-30",
-  "2027-12-27", "2028-01-03",
-  "2028-04-13", "2028-04-17",
-  "2028-05-01", "2028-05-29", "2028-08-28",
-  "2028-12-25", "2029-01-01",
-]);
+import { subscriptionSchedule, formatDispatchDate } from "../../lib/dispatch.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
@@ -53,32 +34,11 @@ const MIX_CONTENTS: Record<string, string> = {
   "21": "6 BFC, 9 STR, 6 MNG",
 };
 
-// Next subscription dispatch day at 21:00, skipping blocked dates and
-// respecting Stripe's 48-hour minimum for trial_end.
-function nextSubscriptionTrialEnd(): number {
-  const now = new Date();
-  const d = new Date(now);
-  d.setHours(0, 0, 0, 0);
-
-  let guard = 0;
-  while (guard++ < 60) {
-    d.setDate(d.getDate() + 1);
-    if (d.getDay() !== SUBSCRIPTION_DAY) continue;
-    if (BLOCKED_DISPATCH.has(toISODate(d))) continue;
-
-    const charge = new Date(d);
-    charge.setHours(21, 0, 0, 0);
-    const trialEnd = Math.floor(charge.getTime() / 1000);
-    if (trialEnd - Math.floor(now.getTime() / 1000) >= 48 * 60 * 60) return trialEnd;
-  }
-  throw new Error("Could not find a valid subscription dispatch date");
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-    const { planKey, tier, customer, note } = req.body || {};
+    const { planKey, tier, customer, note, expected_dispatch_iso } = req.body || {};
     if (!planKey) return res.status(400).json({ error: "Missing planKey" });
 
     const tierStr = String(tier || "7");
@@ -95,10 +55,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-        const trialEnd = nextSubscriptionTrialEnd();
+    const schedule = subscriptionSchedule();
+    if (expected_dispatch_iso && expected_dispatch_iso !== schedule.dispatchISO) {
+      return res.status(409).json({ error: `The order cutoff has passed. Please review your new first dispatch: ${formatDispatchDate(schedule.dispatchISO)}.`, dispatch_iso: schedule.dispatchISO });
+    }
+    const scheduleMetadata = {
+      first_dispatch_iso: schedule.dispatchISO,
+      dispatch_weekday: schedule.weekday,
+      schedule_version: "uk-cutoff-v2",
+    };
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
+      metadata: scheduleMetadata,
+      // Hold this dispatch slot for a short checkout session, not a full day.
+      expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
+      custom_text: { submit: { message: `First dispatch: ${formatDispatchDate(schedule.dispatchISO)}. Then dispatched and billed every ${schedule.weekday}; delivery is normally the following day. Bank holidays may shift dispatch.` } },
       line_items: [{
         price_data: {
           currency: "gbp",
@@ -114,8 +86,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       subscription_data: {
         // ✅ first charge occurs at trial_end; repeats weekly because Price is weekly
-        trial_end: trialEnd,
+        trial_end: schedule.trialEnd,
         metadata: {
+          ...scheduleMetadata,
           kind: "weekly_subscription",
           planKey: String(planKey),
           tier: tierStr,
@@ -132,7 +105,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       cancel_url: `${siteUrl}/shop?pay=cancel&provider=stripe_sub`,
     });
 
-    return res.status(200).json({ url: session.url });
+    return res.status(200).json({ url: session.url, dispatch_iso: schedule.dispatchISO, dispatch_weekday: schedule.weekday });
   } catch (e: any) {
     console.error(e);
     return res.status(500).json({ error: e?.message || "Server error" });

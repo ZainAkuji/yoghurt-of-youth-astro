@@ -10,7 +10,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test:pricing": "tsc -p tests/tsconfig.json && node --test .test-build/tests/pricing.test.js"
+    "test:pricing": "tsc -p tests/tsconfig.json && node --test .test-build/tests/pricing.test.js",
+    "test": "tsc -p tests/tsconfig.json && node --test .test-build/tests/*.test.js"
   },
   "dependencies": {
     "@astrojs/react": "^5.0.7",

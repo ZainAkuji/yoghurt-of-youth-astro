@@ -10,6 +10,7 @@ export interface GoogleReview {
   rating: number;
   text: string;
   date: string | null;
+  reply?: { text: string; date: string | null } | null;
 }
 
 export interface GoogleReviewsData {

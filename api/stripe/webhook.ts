@@ -10,10 +10,7 @@ import {
   RECORD_PROFIT_LUA,
 } from "../../lib/order-profit.js";
 
-// MUST MATCH SUBSCRIPTION_DAY in src/config/dispatch.ts
-const SUBSCRIPTION_DAY = 1; // Thursday
-const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-const SUBSCRIPTION_DAY_NAME = DAY_NAMES[SUBSCRIPTION_DAY];
+import { subscriptionDispatchDetails, formatDispatchDate } from "../../lib/dispatch.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
@@ -72,16 +69,6 @@ function fmtGbp(v: any) {
   const n = Number(v);
   if (!isFinite(n)) return String(v ?? "");
   return new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
-}
-
-function formatDateUKFromUnixSeconds(unixSeconds: number) {
-  if (!unixSeconds || !isFinite(unixSeconds)) return "";
-  const d = new Date(unixSeconds * 1000);
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  const weekday = d.toLocaleDateString("en-GB", { weekday: "long" });
-  return `${dd}/${mm}/${yyyy} (${weekday})`;
 }
 
 function safeJoinAddress(addr: any) {
@@ -293,7 +280,7 @@ function buildOneOffOwnerHtml(p: {
 
 function buildSubCustomerHtml(p: {
   customerName: string; customerEmail: string; customerAddress: string;
-  orderId: string; deliveryDate: string; totalPaid: string;
+  orderId: string; deliveryDate: string; dispatchWeekday: string; totalPaid: string;
   orderLines: string; note: string;
 }) {
   const noteHtml = p.note ? `<p style="margin:12px 0 0;"><strong>Order note:</strong><br>${p.note}</p>` : "";
@@ -310,7 +297,7 @@ function buildSubCustomerHtml(p: {
       <p style="margin:0 0 14px;">Thank you for subscribing to <strong>Yoghurt of Youth</strong>. Your weekly subscription is now live. Your yoghurts are fermented on the day before dispatch for freshness.</p>
       <p style="margin:0 0 14px;">Your order will be sent via Next Day delivery and should arrive the next day. The package is insulated and chilled to maintain the correct temperature for the products during transit.</p>
       <p style="margin:0 0 14px;">Please ensure someone is available to receive the parcel, or select a safe place if preferred.</p>
-      <p style="margin:0 0 14px;">After the first dispatch day, your subscription will be dispatched every following ${SUBSCRIPTION_DAY_NAME}. Bank holidays may shift your dispatch day.</p>
+      <p style="margin:0 0 14px;">After the first dispatch day, your subscription will be dispatched every following ${p.dispatchWeekday}. Bank holidays may shift your dispatch day.</p>
       <p style="margin:0 0 18px;">Below are the full details of your subscription.</p>
       <p style="margin:0 0 18px;">Please leave us a review on Google and follow us on Instagram. Links are down below.</p>
       <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px;margin-bottom:16px;">
@@ -318,7 +305,7 @@ function buildSubCustomerHtml(p: {
       </div>
       <table role="presentation" style="border-collapse:collapse;width:100%;"><tbody>
         <tr><td style="padding:6px 0;width:45%;color:#555;"><strong>First dispatch:</strong></td><td style="padding:6px 0;">${p.deliveryDate}</td></tr>
-        <tr><td style="padding:6px 0;color:#555;"><strong>Billing:</strong></td><td style="padding:6px 0;">Weekly · charged on <strong>${SUBSCRIPTION_DAY_NAME}</strong></td></tr>
+        <tr><td style="padding:6px 0;color:#555;"><strong>Billing:</strong></td><td style="padding:6px 0;">Weekly · charged on <strong>${p.dispatchWeekday}</strong></td></tr>
         <tr><td style="padding:6px 0;color:#555;"><strong>Delivery address:</strong></td><td style="padding:6px 0;">${p.customerAddress}</td></tr>
         <tr><td style="padding:10px 0;border-top:1px solid #e2e8f0;"><strong>Weekly price:</strong></td><td style="padding:10px 0;border-top:1px solid #e2e8f0;"><strong>${p.totalPaid}</strong></td></tr>
       </tbody></table>
@@ -348,7 +335,7 @@ function buildSubCustomerHtml(p: {
 
 function buildSubOwnerHtml(p: {
   customerName: string; customerEmail: string; customerPhone: string;
-  customerAddress: string; orderId: string; deliveryDate: string;
+  customerAddress: string; orderId: string; deliveryDate: string; dispatchWeekday: string;
   totalPaid: string; orderLines: string; note: string;
 }) {
   const noteHtml = p.note ? `<div style="margin-top:14px;background:#fff7ed;border:1px solid #fed7aa;padding:12px;"><strong>Customer note:</strong><br>${p.note}</div>` : "";
@@ -372,7 +359,7 @@ function buildSubOwnerHtml(p: {
       </tbody></table>
       <h4 style="margin:0 0 8px;font-size:16px;">Billing</h4>
       <table role="presentation" style="border-collapse:collapse;width:100%;margin-bottom:14px;"><tbody>
-        <tr><td style="padding:6px 0;width:45%;color:#555;"><strong>Schedule:</strong></td><td style="padding:6px 0;">Weekly · charged ${SUBSCRIPTION_DAY_NAME}s (bank holidays may shift dispatch)</td></tr>
+        <tr><td style="padding:6px 0;width:45%;color:#555;"><strong>Schedule:</strong></td><td style="padding:6px 0;">Weekly · charged ${p.dispatchWeekday}s (bank holidays may shift dispatch)</td></tr>
         <tr><td style="padding:6px 0;color:#555;"><strong>Weekly price:</strong></td><td style="padding:6px 0;"><strong>${p.totalPaid}</strong></td></tr>
         <tr><td style="padding:6px 0;color:#555;"><strong>Payment method:</strong></td><td style="padding:6px 0;">Stripe (subscription)</td></tr>
       </tbody></table>
@@ -567,7 +554,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           safeJoinAddress(cd.address) ||
           "";
 
-        const firstDelivery = sub?.trial_end ? formatDateUKFromUnixSeconds(sub.trial_end) : "";
+        const schedule = subscriptionDispatchDetails(sm, sub?.trial_end, sub?.billing_cycle_anchor);
+        const firstDelivery = schedule.dispatchISO ? formatDispatchDate(schedule.dispatchISO) : "See your subscription in Stripe";
 
         const subOwnerHtml = buildSubOwnerHtml({
           customerName: customer_name,
@@ -576,6 +564,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           customerAddress: customer_address,
           orderId: subId || session.id || "",
           deliveryDate: firstDelivery,
+          dispatchWeekday: schedule.weekday,
           totalPaid: weeklyPriceText || "",
           orderLines: linesArr.join("\n"),
           note: String(sm.note || ""),
@@ -589,6 +578,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             customerAddress: customer_address,
             orderId: subId || session.id || "",
             deliveryDate: firstDelivery,
+            dispatchWeekday: schedule.weekday,
             totalPaid: weeklyPriceText || "",
             orderLines: linesArr.join("\n"),
             note: String(sm.note || ""),

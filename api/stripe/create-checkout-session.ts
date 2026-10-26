@@ -1,3 +1,4 @@
+import { nextDispatchISO, formatDateUK, formatDispatchDate, strainForDispatch } from "../../lib/dispatch.js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Stripe from "stripe";
 import { computeTotals, isValidCart, MIN_ORDER_BOTTLES } from "../../lib/pricing.js";
@@ -19,11 +20,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed." });
 
   try {
-    const { cart, totals: clientTotals, customer = {}, delivery_date, delivery_window, note, gift_code } = (req.body || {}) as {
+    const { cart, customer = {}, delivery_window, note, gift_code, expected_dispatch_iso } = (req.body || {}) as {
       cart: Record<string, number>;
       totals: any;
       customer?: { name?: string; email?: string; phone?: string; address?: string };
       delivery_date: string;
+      expected_dispatch_iso?: string;
       delivery_window: string;
       note?: string;
       lines?: string[];
@@ -55,6 +57,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const orderLines = totals.items.map(({ name, qty }) => `${name} × ${qty}`);
     if (validGiftStrQty) orderLines.push(`STR × 1 (FREE — ${giftCode})`);
 
+    const dispatchISO = nextDispatchISO();
+    if (expected_dispatch_iso && expected_dispatch_iso !== dispatchISO) {
+      return res.status(409).json({ error: `The order cutoff has passed. Please review your new dispatch: ${formatDispatchDate(dispatchISO)}.`, dispatch_iso: dispatchISO });
+    }
+
     const orderId = `YOY-${Date.now().toString().slice(-6)}`;
 
     // ✅ Keep metadata small (Stripe metadata values are short strings)
@@ -66,7 +73,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       customer_phone: customer.phone || "",
       customer_address: customer.address || "",
 
-      delivery_date: delivery_date || "",
+      delivery_date: formatDateUK(dispatchISO),
+      dispatch_iso: dispatchISO,
       delivery_window: delivery_window || "",
       note: note || "",
 
@@ -92,7 +100,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       order_id: orderId,
       payment_provider: "stripe",
-      yoghurt_strain: String(clientTotals?.deliveryBrand || ""),
+      yoghurt_strain: strainForDispatch(dispatchISO),
     };
 
     const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
@@ -101,6 +109,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
+      custom_text: { submit: { message: `Dispatch: ${formatDispatchDate(dispatchISO)}. Chilled next-day delivery.` } },
       customer_creation: "always",
       billing_address_collection: "required",
       phone_number_collection: { enabled: true },
@@ -132,7 +142,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       metadata,
     });
 
-    return res.status(200).json({ url: session.url, id: session.id });
+    return res.status(200).json({ url: session.url, id: session.id, dispatch_iso: dispatchISO });
   } catch (e: any) {
     console.error(e);
     return res.status(500).json({ error: e?.message || "Server error" });
