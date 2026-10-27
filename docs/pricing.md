@@ -1,4 +1,4 @@
-# Pricing from 16 October 2026
+# Pricing (delivery updated 27 October 2026)
 
 `lib/pricing.ts` is the source of truth for bottle prices, delivery charges and subscription discounts. It is imported by the shop, basket, checkout, product schema and Stripe checkout endpoints.
 
@@ -8,11 +8,30 @@
 - Black Forest Chocolate, Strawberry and Mango: £2.09 per 250ml bottle.
 - Minimum order: 3 purchased bottles, with mixed flavours allowed.
 - Every purchased bottle is charged; the 7-for-6 offer has been removed.
-- Delivery: £3.50 for 3–4 bottles, £4.95 for 5–13 bottles, free for 14 or more.
+- Delivery: £3.50 for 3–5 bottles, £4.95 for 6–13 bottles, free for 14 or more.
 - Existing Stripe promotion codes remain available at secure checkout. Delivery stays a separate line so yoghurt-only coupons do not discount delivery.
 - The separate YOY25 gift remains; gift bottles do not qualify an order for the minimum quantity or free delivery.
 
-The server validates quantities and calculates prices itself, ignoring totals or order lines sent by the browser. Amounts are calculated in pence to avoid rounding drift. Fulfilment/email metadata comes from these same quantities and totals. The existing profit/POAS calculations still use the actual Stripe payment and the existing cost model.
+The server validates quantities and calculates prices itself, ignoring totals or order lines sent by the browser. Amounts are calculated in pence to avoid rounding drift. Fulfilment/email metadata comes from these same quantities and totals. `SMALL_DELIVERY_MAX_BOTTLES` controls the small-order cutoff in both the calculation and the shop's delivery labels/FAQ.
+
+## Profit and POAS delivery costs
+
+`lib/order-profit.ts` holds actual fulfilment costs, separate from what the customer pays for delivery:
+
+| Bottles shipped (including gifts) | Actual delivery cost |
+| --- | --- |
+| 3–5 | £5.06 |
+| 6–8 | £7.59 |
+| 9–14 | £7.77 |
+| 15+ | £7.95 |
+
+The estimate uses the actual Stripe amount paid, including delivery and any discounts, minus bottle cost (50p each), actual delivery cost and estimated Stripe fees (1.5% + 20p). For five plain bottles without a discount or gift, the customer pays £13.45, estimated costs are £7.96, and estimated profit before marketing is £5.49.
+
+Purchased quantities determine the customer delivery charge; all shipped bottles determine fulfilment costs. For example, five purchased bottles plus a free gift still charge £3.50 delivery, but the six shipped bottles cost £7.59 to deliver.
+
+Newly processed orders after deployment use cost model `pricing-2026-10-27-delivery-bands`. Stored historical profit totals and the £12/day marketing budget are unchanged. Daily, last-seven-day and overall POAS automatically include new profits as they are recorded. This update does not backfill historical orders or reset tracking. Existing Stripe Checkout sessions retain the customer charges they were created with; a new session uses the updated £3.50 charge.
+
+Daily and historical POAS now share the same display rounding: an exact ratio of 0.945 displays as 0.95×. This does not change stored profit or marketing spend.
 
 ## New weekly subscriptions
 
@@ -32,7 +51,7 @@ The subscription endpoint retrieves the existing configured Stripe Price only to
 ## Validation
 
 ```sh
-npm run test:pricing
+npm test
 npx tsc --noEmit
 npm run build
 ```
@@ -46,6 +65,8 @@ Examples of one-off plain baskets, including delivery:
 | Bottles | Total |
 | --- | --- |
 | 3 | £9.47 |
+| 5 | £13.45 |
+| 6 | £16.89 |
 | 7 | £18.88 |
 | 10 | £24.85 |
 | 13 | £30.82 |

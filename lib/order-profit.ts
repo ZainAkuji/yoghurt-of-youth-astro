@@ -1,8 +1,9 @@
-// Costs from YoY Finances.xlsx, Pricing tab.
+// Bottle/Stripe costs from YoY Finances.xlsx, Pricing tab.
+// Delivery costs updated by Zain on 27 October 2026.
 // Money is calculated in pence: 1200 = £12.
 
-import { marketingSpend } from "./poas-history.js";
-export const COST_MODEL = "pricing-2026-09-28-15plus";
+import { formatPoas, marketingSpend } from "./poas-history.js";
+export const COST_MODEL = "pricing-2026-10-27-delivery-bands";
 
 export function estimateOrderProfit(
   paidPence: number,
@@ -19,7 +20,13 @@ export function estimateOrderProfit(
   }
 
   const bottleCostPence = bottles * 50;
-  const deliveryCostPence = bottles <= 4 ? 523 : bottles <= 14 ? 815 : 850;
+  // Actual fulfilment cost, separate from the customer's delivery charge.
+  // bottles includes any free gift bottles, since those also need shipping.
+  const deliveryCostPence =
+    bottles <= 5 ? 506 :
+    bottles <= 8 ? 759 :
+    bottles <= 14 ? 777 :
+    795;
 
   // Estimated Stripe fee from your spreadsheet.
   const stripeFeePence =
@@ -146,7 +153,7 @@ export function profitEmailHtml(
         ${row(
           "Today’s running POAS",
           complete
-            ? (spend === 0 ? "N/A: no marketing spend" : `${(profit / spend).toFixed(2)}×`)
+            ? formatPoas(profit, spend)
             : "Unavailable: missing cost estimates"
         )}
 

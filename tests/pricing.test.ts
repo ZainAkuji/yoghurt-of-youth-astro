@@ -31,8 +31,8 @@ async function invoke(handler: typeof checkout, body: unknown) {
 
 const cases = [
   // Quantity, merchandise pence, delivery pence; all plain.
-  [0, 0, 0], [3, 597, 350], [4, 796, 350], [5, 995, 495],
-  [7, 1393, 495], [10, 1990, 495], [13, 2587, 495],
+  [0, 0, 0], [3, 597, 350], [4, 796, 350], [5, 995, 350],
+  [6, 1194, 495], [7, 1393, 495], [8, 1592, 495], [9, 1791, 495], [10, 1990, 495], [13, 2587, 495],
   [14, 2786, 0], [15, 2985, 0], [21, 4179, 0], [35, 6965, 0],
 ];
 for (const [qty, merchandise, delivery] of cases) {
@@ -54,6 +54,8 @@ test("all three flavours cost 209p; mixed quantities qualify together", () => {
   assert.equal(mixed.deliveryPence, 0);
   assert.equal(mixed.qtyTotal, 14);
   assert.equal(computeTotals({ PLN: 5, BFC: 3, STR: 3, MNG: 2 }).deliveryPence, 495);
+  assert.equal(computeTotals({ PLN: 2, STR: 1, BFC: 1, MNG: 1 }).totalPence, 1375);
+  assert.equal(computeTotals({ STR: 5 }).totalPence, 1395);
 });
 
 test("a gift bottle counts for fulfilment but does not unlock free delivery", () => {
@@ -113,6 +115,12 @@ test("checkout charges the shared prices and derives email/profit metadata from 
   assert.equal(gift.metadata?.gift_str_qty, "1");
   assert.equal(gift.metadata?.delivery_fee, "4.95");
   assert.match(String(gift.metadata?.order_lines), /STR × 1/);
+  await invoke(checkout, { cart: { PLN: 5 }, gift_code: "YOY25" });
+  const smallGift = sent.at(-1)!;
+  assert.equal(smallGift.metadata?.bottles, "6");
+  assert.equal(smallGift.metadata?.delivery_fee, "3.5");
+  assert.equal(smallGift.metadata?.total_paid, "13.45");
+  assert.equal(smallGift.line_items?.[1].price_data?.unit_amount, 350);
 });
 
 test("invalid quantities and orders below the minimum never reach Stripe", async (t) => {

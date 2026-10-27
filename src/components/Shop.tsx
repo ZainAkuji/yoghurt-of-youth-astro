@@ -1,4 +1,4 @@
-import { computeTotals, SUB_PRICING, PLAIN_PRICE_PENCE, FLAVOURED_PRICE_PENCE, FREE_DELIVERY_BOTTLES, SMALL_DELIVERY_PENCE, STANDARD_DELIVERY_PENCE } from "../../lib/pricing";
+import { computeTotals, SUB_PRICING, PLAIN_PRICE_PENCE, FLAVOURED_PRICE_PENCE, MIN_ORDER_BOTTLES, FREE_DELIVERY_BOTTLES, SMALL_DELIVERY_MAX_BOTTLES, SMALL_DELIVERY_PENCE, STANDARD_DELIVERY_PENCE } from "../../lib/pricing";
 import React, { useEffect, useMemo, useState } from "react";
 import { useStore } from "@nanostores/react";
 import {
@@ -314,8 +314,8 @@ export default function Shop({ initialDispatchISO }: { initialDispatchISO: strin
                   <p className="mt-5 ml-3 text-sm text-slate-900">Chilled next-day delivery charge:</p>
                   <div className="mt-2 grid grid-cols-3 gap-2">
                     {[
-                      { label: "3–4 bottles", value: gbp(SMALL_DELIVERY_PENCE / 100), active: m.bottles >= 3 && m.bottles <= 4 },
-                      { label: `5–${FREE_DELIVERY_BOTTLES - 1} bottles`, value: gbp(STANDARD_DELIVERY_PENCE / 100), active: m.bottles >= 5 && m.bottles < FREE_DELIVERY_BOTTLES },
+                      { label: `${MIN_ORDER_BOTTLES}–${SMALL_DELIVERY_MAX_BOTTLES} bottles`, value: gbp(SMALL_DELIVERY_PENCE / 100), active: m.bottles >= MIN_ORDER_BOTTLES && m.bottles <= SMALL_DELIVERY_MAX_BOTTLES },
+                      { label: `${SMALL_DELIVERY_MAX_BOTTLES + 1}–${FREE_DELIVERY_BOTTLES - 1} bottles`, value: gbp(STANDARD_DELIVERY_PENCE / 100), active: m.bottles > SMALL_DELIVERY_MAX_BOTTLES && m.bottles < FREE_DELIVERY_BOTTLES },
                       { label: `${FREE_DELIVERY_BOTTLES}+ bottles`, value: "FREE", active: m.bottles >= FREE_DELIVERY_BOTTLES },
                     ].map((d) => (
                       <div key={d.label}
@@ -442,22 +442,17 @@ export default function Shop({ initialDispatchISO }: { initialDispatchISO: strin
                   {/* Delivery pills */}
                   <p className="mt-5 ml-3 text-sm font-semibold text-slate-900">Chilled next-day delivery charge</p>
                   <div className="mt-2 grid grid-cols-2 xs:grid-cols-4 gap-2">
-                    {[
-                      { tier: 4, value: "£3.50" },
-                      { tier: 7, value: "£4.95" },
-                      { tier: 14, value: "FREE" },
-                      { tier: 21, value: "FREE" },
-                    ].map((d) => (
+                    {Object.entries(SUB_PRICING).map(([tier, pricing]) => (
                       <div
-                        key={d.tier}
+                        key={tier}
                         className={cn(
                           "rounded-xl border-2 px-2 py-2 text-center transition",
-                          subTier === d.tier ? "border-slate-900 bg-slate-50" : "border-slate-200 opacity-60"
+                          subTier === Number(tier) ? "border-slate-900 bg-slate-50" : "border-slate-200 opacity-60"
                         )}
                       >
-                        <p className="text-[11px] text-slate-600">{d.tier} bottles</p>
-                        <p className={cn("text-sm font-bold", d.value === "FREE" ? "text-emerald-600" : "text-slate-900")}>
-                          {d.value}
+                        <p className="text-[11px] text-slate-600">{tier} bottles</p>
+                        <p className={cn("text-sm font-bold", pricing.delivery === 0 ? "text-emerald-600" : "text-slate-900")}>
+                          {pricing.delivery === 0 ? "FREE" : gbp(pricing.delivery)}
                         </p>
                       </div>
                     ))}
@@ -540,7 +535,7 @@ export default function Shop({ initialDispatchISO }: { initialDispatchISO: strin
                   title: "Delivery & dispatch",
                   body: (
                     <>
-                      <p>Chilled next-day delivery: <strong>{gbp(SMALL_DELIVERY_PENCE / 100)}</strong> on 3–4 bottles, <strong>{gbp(STANDARD_DELIVERY_PENCE / 100)}</strong> on 5–{FREE_DELIVERY_BOTTLES - 1}, and <strong>free</strong> on {FREE_DELIVERY_BOTTLES} or more.</p>
+                      <p>Chilled next-day delivery: <strong>{gbp(SMALL_DELIVERY_PENCE / 100)}</strong> on {MIN_ORDER_BOTTLES}–{SMALL_DELIVERY_MAX_BOTTLES} bottles, <strong>{gbp(STANDARD_DELIVERY_PENCE / 100)}</strong> on {SMALL_DELIVERY_MAX_BOTTLES + 1}–{FREE_DELIVERY_BOTTLES - 1}, and <strong>free</strong> on {FREE_DELIVERY_BOTTLES} or more.</p>
                       <p className="mt-2">We ferment the day before dispatch and send orders on <strong>Mondays</strong> and <strong>Thursdays</strong> via next-day delivery. Bank holidays may shift your dispatch day. Order before 9pm Saturday for Monday dispatch, or before 9pm Tuesday for Thursday dispatch (UK time). The date shown at checkout accounts for holidays.</p>
                     </>
                   ),

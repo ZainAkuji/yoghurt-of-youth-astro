@@ -4,6 +4,7 @@ export const PLAIN_PRICE_PENCE = 199;
 export const FLAVOURED_PRICE_PENCE = 209;
 export const MIN_ORDER_BOTTLES = 3;
 export const FREE_DELIVERY_BOTTLES = 14;
+export const SMALL_DELIVERY_MAX_BOTTLES = 5;
 export const SMALL_DELIVERY_PENCE = 350;
 export const STANDARD_DELIVERY_PENCE = 495;
 
@@ -16,7 +17,7 @@ export const PRODUCTS = [
 
 export function deliveryPenceForQty(bottles: number): number {
   if (bottles <= 0 || bottles >= FREE_DELIVERY_BOTTLES) return 0;
-  return bottles <= 4 ? SMALL_DELIVERY_PENCE : STANDARD_DELIVERY_PENCE;
+  return bottles <= SMALL_DELIVERY_MAX_BOTTLES ? SMALL_DELIVERY_PENCE : STANDARD_DELIVERY_PENCE;
 }
 
 export function isValidCart(cart: unknown): cart is Record<string, number> {

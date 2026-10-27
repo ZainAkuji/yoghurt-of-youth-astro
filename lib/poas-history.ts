@@ -34,6 +34,13 @@ export type ProfitDay = {
   unknown: number;
 };
 
+// Round the pence ratio before formatting, so a value like 0.945 displays 0.95.
+export function formatPoas(profitPence: number, spendPence: number): string {
+  if (spendPence === 0) return "N/A: no marketing spend";
+  const hundredths = Math.round(Math.abs(profitPence) * 100 / spendPence);
+  return `${profitPence < 0 ? "-" : ""}${(hundredths / 100).toFixed(2)}×`;
+}
+
 export function periodPoas(days: ProfitDay[]): string {
   if (!days.length) {
     return "Waiting for a completed tracking day";
@@ -53,9 +60,7 @@ export function periodPoas(days: ProfitDay[]): string {
     0
   );
 
-  return spend === 0
-    ? "N/A: no marketing spend"
-    : `${(profit / spend).toFixed(2)}×`;
+  return formatPoas(profit, spend);
 }
 
 export async function poasHistoryHtml(
