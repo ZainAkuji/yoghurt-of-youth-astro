@@ -7,7 +7,7 @@ export const POAS_START_DATE = "2026-09-29";
 // Keep old entries and add future changes in date order.
 const MARKETING_COSTS = [
   { from: "2026-09-28", pence: 1200 },
-  // { from: "2026-10-05", pence: 1500 },
+  { from: "2026-11-01", pence: 1500 },
 ];
 
 export function marketingSpend(day: string): number {
