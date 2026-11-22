@@ -195,7 +195,7 @@ export default function Shop({ initialDispatchISO }: { initialDispatchISO: strin
                   <GoogleReviewSummary data={googleReviews.data} />
                   <span className="inline-flex items-center gap-2 whitespace-nowrap">
                     <span aria-hidden="true" className="text-slate-800">·</span>
-                    <span>1000+ of satisfied customers</span>
+                    <span>1000+ satisfied customers</span>
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-slate-600">
